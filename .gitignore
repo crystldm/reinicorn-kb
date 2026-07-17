@@ -1,0 +1,3 @@
+# Agent job output is local and ephemeral
+generated/agent-jobs/*/
+!generated/agent-jobs/.gitkeep
