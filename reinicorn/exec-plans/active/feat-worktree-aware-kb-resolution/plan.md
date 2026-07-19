@@ -3,7 +3,7 @@
 **Ticket:** N/A
 **Author:** Michael Biehl
 **Created:** 2026-07-19
-**Status:** in-progress
+**Status:** implemented — verified end-to-end (hook auto-init via alternates in a real worktree); awaiting code review + PR
 
 ## Goal
 
@@ -15,15 +15,15 @@ fires in every worktree. `kb.py` resolution logic untouched.
 
 ## Acceptance Criteria
 
-- [ ] `rcorn _post-checkout` in a fresh linked worktree initializes kb with
+- [x] `rcorn _post-checkout` in a fresh linked worktree initializes kb with
       `--reference <git-common-dir>/modules/kb` (alternates file present in
       the worktree's module gitdir).
-- [ ] Fresh-clone behavior unchanged: no `<common>/modules/kb` → plain
+- [x] Fresh-clone behavior unchanged: no `<common>/modules/kb` → plain
       `--init` (no `--reference` args).
-- [ ] `rcorn hooks install` run from inside a linked worktree lands git hooks
+- [x] `rcorn hooks install` run from inside a linked worktree lands git hooks
       in the shared `<common>/hooks/`, not `.git/worktrees/<name>/hooks/`.
-- [ ] `using-git-worktrees` skill Step 2 documents auto-init + manual fallback.
-- [ ] All new behavior covered by tests (golden principle 7); full suite green.
+- [x] `using-git-worktrees` skill Step 2 documents auto-init + manual fallback.
+- [x] All new behavior covered by tests (golden principle 7); full suite green.
 
 ## Approach
 
@@ -56,15 +56,15 @@ pointing at the main module's objects.
 - Test: `tests/test_post_checkout_worktree.py` (new)
 
 **Steps:**
-- [ ] Write failing tests: `kb_reference_args` returns `[]` when
+- [x] Write failing tests: `kb_reference_args` returns `[]` when
       `<common>/modules/kb` is absent; returns the `--reference` pair inside a
       linked worktree; `cmd_post_checkout(["", "", "1"])` in a fresh worktree
       of `submodule_repo` initializes kb with an alternates file pointing at
       `<parent>/.git/modules/kb/objects`.
-- [ ] Run: `pytest tests/test_post_checkout_worktree.py -v` → FAIL (ImportError).
-- [ ] Implement `kb_reference_args` in `kb.py`; splice into `post_checkout.py`.
-- [ ] Run same tests → PASS. Run `pytest` full suite → green.
-- [ ] Commit: `feat(kb): borrow objects via --reference in post-checkout kb init`
+- [x] Run: `pytest tests/test_post_checkout_worktree.py -v` → FAIL (ImportError).
+- [x] Implement `kb_reference_args` in `kb.py`; splice into `post_checkout.py`.
+- [x] Run same tests → PASS. Run `pytest` full suite → green.
+- [x] Commit: `feat(kb): borrow objects via --reference in post-checkout kb init`
 
 ### Task 2: hooks install to git-common-dir
 
@@ -74,13 +74,13 @@ pointing at the main module's objects.
 - Test: `tests/test_post_checkout_worktree.py` (add test)
 
 **Steps:**
-- [ ] Write failing test: repo + `git worktree add`, chdir into worktree,
+- [x] Write failing test: repo + `git worktree add`, chdir into worktree,
       `cmd_hooks_install()`, assert `post-checkout` exists in the main
       `.git/hooks/` and `.git/worktrees/<name>/hooks/` was not created.
-- [ ] Run it → FAIL (hook lands in per-worktree gitdir).
-- [ ] Swap the rev-parse flag.
-- [ ] Run test + full suite → green.
-- [ ] Commit: `fix(hooks): install git hooks to the shared common dir`
+- [x] Run it → FAIL (hook lands in per-worktree gitdir).
+- [x] Swap the rev-parse flag.
+- [x] Run test + full suite → green.
+- [x] Commit: `fix(hooks): install git hooks to the shared common dir`
 
 ### Task 3: skill doc note
 
@@ -88,10 +88,10 @@ pointing at the main module's objects.
 - Modify: `.agents/skills/using-git-worktrees/SKILL.md` (Step 2)
 
 **Steps:**
-- [ ] Add note: reinicorn repos auto-init kb via the post-checkout hook
+- [x] Add note: reinicorn repos auto-init kb via the post-checkout hook
       (`--reference`, no network); manual fallback
       `git submodule update --init kb` when hooks aren't installed.
-- [ ] Commit: `docs(skill): note kb auto-init in worktree setup`
+- [x] Commit: `docs(skill): note kb auto-init in worktree setup`
 
 ## Dependencies
 
