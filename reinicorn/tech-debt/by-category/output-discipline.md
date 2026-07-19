@@ -22,17 +22,6 @@
 
 ---
 
-## Medium
-
-### OUT-02. Emoji in `pre_push.py` — only file with emoji
-
-**File:** `commands/internal/pre_push.py:70,81`
-**Severity:** medium
-**Impact:** Uses a unicorn emoji (`\U0001f984`). No other file uses emoji. Not all terminals render emoji. Not gated by `NO_COLOR` or terminal capability checks. (Given Reinicorn's unicorn branding this may now be intentional — re-verify whether it should be kept as debt.)
-**Remediation:** Remove emoji or route through console module with terminal capability check.
-
----
-
 ## Low
 
 ### OUT-03. No `--verbose`/`--quiet` flags

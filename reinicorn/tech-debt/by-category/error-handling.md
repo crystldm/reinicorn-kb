@@ -18,17 +18,6 @@
 
 ## Medium
 
-### ERR-04. Broad `except Exception` suppression silences errors
-
-**Files:**
-- `commands/internal/post_checkout.py:32` — `contextlib.suppress(Exception)` around submodule update
-- `commands/internal/post_merge.py:57` — `contextlib.suppress(Exception)` around plan archival
-
-**Severity:** medium
-**Impact:** Programming bugs, permission errors, and meaningful failures are invisible. Violates "Never silence broadly — at minimum log a warning."
-**Remediation:** Suppress specific exceptions (`subprocess.CalledProcessError`, `OSError`). At minimum add `console.warn()` before continuing.
-**Note (re-verify):** Both sites are fail-safe git hooks where a failure must not block the checkout/merge — the broad suppression may be intentional. Confirm intent before narrowing.
-
 ### ERR-05. Bare `except Exception` catches too broadly
 
 **Files:**

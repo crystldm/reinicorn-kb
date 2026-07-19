@@ -22,7 +22,7 @@ same downstream file is currently tracked by the update manifest even though it 
 intended to become project-specific after initialization.
 
 Renaming alone is not sufficient for public release. The audit in
-[`public-release-readiness-and-naming-collision-audit.md`](../tech-debt/public-release-readiness-and-naming-collision-audit.md)
+`public-release-readiness-and-naming-collision-audit.md` (private-only, not published)
 also identified licensing, security, documentation, history-sanitization, and
 anonymous-clone release gates. These concerns need one stable program contract but
 must not be forced into one unreviewable implementation plan.

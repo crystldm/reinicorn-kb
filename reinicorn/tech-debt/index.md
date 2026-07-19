@@ -23,10 +23,10 @@ For the project's philosophy on tech debt, see [Core Beliefs: Principle 6](../sp
 | Severity | Count |
 |----------|-------|
 | Critical | 1 |
-| High | 4 |
-| Medium | 16 |
+| High | 3 |
+| Medium | 12 |
 | Low | 12 |
-| **Total** | **33** |
+| **Total** | **28** |
 
 ---
 

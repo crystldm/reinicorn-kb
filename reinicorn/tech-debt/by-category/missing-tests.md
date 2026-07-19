@@ -8,13 +8,6 @@
 
 ## Medium — Thin or missing coverage
 
-### TEST-08. `commands/internal/hook_check.py` — command wrapper untested
-
-**File:** `commands/internal/hook_check.py`
-**Severity:** medium
-**Impact:** Trivial (2 lines), but it gates all hooks. The underlying `mode.hook_check()` is tested (`tests/test_mode.py`), but the `cmd_hook_check` wrapper's 0/1 mapping is not directly exercised.
-**Remediation:** Two simple tests asserting `cmd_hook_check` returns 0 when enabled, 1 when disabled. (Low value given delegation — re-verify whether worth tracking.)
-
 ### TEST-10. `KeyboardInterrupt` and `SystemExit` handling in `main()` untested
 
 **File:** `cli.py:381-386` (`main()` exception handling)

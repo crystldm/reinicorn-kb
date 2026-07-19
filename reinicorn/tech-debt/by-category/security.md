@@ -7,14 +7,6 @@
 
 ## High
 
-### SEC-06. Unvalidated kb URL passed to `git submodule add`
-
-**File:** `submodule.py:83` (`setup_submodule` calls `validate_git_url`); `kb.py:37-67` (`get_kb_dir` path check)
-**Severity:** high
-**Impact:** User-supplied kb URL passed to `git submodule add`. An unvalidated URL can use git's `ext::` transport helper for command execution or `file://`/local paths for unintended access.
-**Remediation:** Validate URL matches `https://`, `ssh://`, or `git@host:path`. Reject `ext::`, `fd::`, `git://`, and option-like values.
-**Note (re-verify):** `submodule.py:83` now calls `validate_git_url()` before `git submodule add`, and `kb.py:get_kb_dir` rejects `.gitmodules` paths that escape the repo root — this concern appears largely closed. Kept per the release-audit anchor list; confirm no other unvalidated `submodule add` path exists before removing.
-
 ### SEC-08. External lint scripts executed without validation
 
 **File:** `linter/runner.py:76,91-95`
@@ -32,14 +24,6 @@
 **Severity:** medium
 **Impact:** `REINICORN_TICKET_PATTERN` is used as a regex without validation. Malformed patterns crash the CLI; crafted patterns cause ReDoS.
 **Remediation:** Wrap `re.search()` in `try/except re.error`. Consider pattern length/complexity limits.
-
-### SEC-11. `branch` name in `plan complete` flows into paths
-
-**File:** `kb.py:191` (`plan_dir`), `commands/plan.py:147-190` (`cmd_plan_complete` → `branch_doc_path` → `shutil.move`)
-**Severity:** medium
-**Impact:** The `plan complete` CLI argument flows through `branch_doc_path()` into `shutil.move()`. A crafted branch value could operate on unexpected paths.
-**Remediation:** Validate with `Path.resolve().is_relative_to()` or a regex allowlist.
-**Note (re-verify):** `sanitize_branch()` now replaces `/` with `-`, neutralising slash-based `../` traversal, so exploitability is much reduced. Kept because a literal `..`-style CLI argument is not explicitly rejected — confirm whether any residual path escape remains.
 
 ### SEC-13. No validation of mode values in `set_mode`
 

@@ -10,7 +10,6 @@ Periodic kb review and scheduled cleanup passes pull from this queue when there 
 
 | Priority | ID | Description | Estimated Effort | Status | Added |
 |----------|------|-------------|-----------------|--------|-------|
-| P1 | SEC-06 | Validate kb URL before `git submodule add` (re-verify — largely closed) | XS | queued | 2026-02-17 |
 | P1 | SEC-08 | External lint scripts executed without validation | M | queued | 2026-02-17 |
 | P1 | ERR-01 | `SystemExit` raised deep in stack — use domain exceptions | M | queued | 2026-02-17 |
 | P1 | OUT-01 | Many raw `print()` calls bypass console module | L | queued | 2026-02-17 |
