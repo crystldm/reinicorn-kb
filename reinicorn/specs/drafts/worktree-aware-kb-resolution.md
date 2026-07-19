@@ -58,13 +58,33 @@ In `src/reinicorn/kb.py`, `get_kb_dir` learns to redirect to the main checkout:
 uninitialized worktrees, and `rcorn kb status --compact` starts working there
 via this redirection.
 
+### Opt-in: real per-worktree kb via `--reference`
+
+When a worktree genuinely needs its own kb checkout (e.g. testing kb-pinned
+behavior), the sanctioned way is to borrow objects from the main checkout's
+module clone instead of re-fetching over the network:
+
+```sh
+git submodule update --init \
+  --reference "$(git rev-parse --path-format=absolute --git-common-dir)/modules/kb" -- kb
+```
+
+The `using-git-worktrees` skill (Step 2, project setup) documents this as the
+opt-in path. `--reference` for `git submodule add/update` dates to git 1.6.4
+(2009), so there is no meaningful version floor. Caveat: the borrowed clone
+uses alternates, so aggressive `git gc` in the main module could prune objects
+a borrower still needs — acceptable here because both sides track the same
+`origin/main`; pass `--dissociate` for a standalone (still network-free) copy
+if that ever matters. Rule 2 above means such a worktree keeps using its own
+kb automatically.
+
 ## Non-Goals
 
 - No automatic `git submodule update --init` in worktrees (that is the cost we
   are avoiding, not a fallback to add).
 - No symlinking of `kb/` (tested; fights git — see Problem).
-- No shared-object optimizations (`--reference`) for users who *do* want a real
-  per-worktree kb; that remains a manual choice and keeps working via rule 2.
+- No automatic `--reference` init during worktree creation — the opt-in command
+  above stays a deliberate, documented choice, not default behavior.
 - No locking/coordination for concurrent kb writes across worktrees — the same
   race already exists between any two sessions today and is handled by
   rebase-on-publish.
