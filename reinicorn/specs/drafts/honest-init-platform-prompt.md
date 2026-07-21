@@ -80,17 +80,26 @@ No per-row selected/unselected decoration in the list. Do not use the word
 
 ### 3. Select-set parse logic
 
-Replace toggle semantics with select-set:
+Replace toggle semantics with select-set.
 
-- Empty input (after strip) → return the default-selected platform keys
-  (no warning — this is the intentional confirm-defaults path).
-- Non-empty input → split on commas (whitespace stripped); collect each
-  digit token whose index is in range as a selected option. Deduplicate;
-  return keys in option-list order (not input order).
-- Non-digit / out-of-range tokens are discarded, but **not silently**:
-  print a warning via `console.warn` that names the discarded token(s).
-- If the input was non-empty but yielded no valid indices, print that
-  warning and fall back to defaults (still no re-prompt loop).
+**Parse order (pinned — do not fuse whitespace):**
+
+1. Strip leading/trailing whitespace from the whole input.
+2. If empty → return the default-selected platform keys (no warning —
+   intentional confirm-defaults path).
+3. Else **split on commas first**, then **strip each token**. Do **not**
+   remove spaces before splitting (today’s
+   `raw.replace(" ", "").split(",")` is rejected: it silently turns
+   `2 3` into token `23`).
+4. For each non-empty token: if it is all digits and the 1-based index is
+   in range, select that option; otherwise discard it.
+5. Deduplicate selected options; return keys in option-list order (not
+   input order).
+
+Discarded tokens are **not silent**: print a warning via `console.warn`
+that names the discarded token(s). If the input was non-empty but yielded
+no valid indices, print that warning and fall back to defaults (still no
+re-prompt loop).
 
 Warning copy must say what was discarded and what was kept, e.g.:
 
@@ -98,6 +107,8 @@ Warning copy must say what was discarded and what was kept, e.g.:
   (`Claude Code`).
 - `1,abc,9` → warn that `abc` and `9` were ignored; selection is still
   `["claude"]` from the valid token.
+- `2 3` → one token `"2 3"` (not `"23"`); non-digit → warn + defaults.
+- `2, 3` → tokens `"2"` and `"3"` → `["cursor", "copilot"]`, no warning.
 
 Use the existing `reinicorn.console.warn` helper (stderr progress/debug
 surface is fine; the point is a human/agent-visible line, not silence).
@@ -110,6 +121,8 @@ Examples with today’s defaults:
 | `2` | `["cursor"]` | no |
 | `1,2` | `["claude", "cursor"]` | no |
 | `2,4` | `["cursor", "codex"]` | no |
+| `2, 3` | `["cursor", "copilot"]` | no |
+| `2 3` | `["claude"]` (defaults) | yes — token `2 3` discarded |
 | `abc` | `["claude"]` (defaults) | yes — input discarded |
 | `1,abc,9` | `["claude"]` | yes — `abc`, `9` discarded |
 
@@ -129,6 +142,10 @@ captures stdout/stderr, asserting:
   was discarded / defaults apply.
 - Input `"1,abc"` returns `["claude"]` and emits a warning mentioning
   the discarded token.
+- Input `"2, 3"` returns `["cursor", "copilot"]` with no warning
+  (split-then-strip-per-token).
+- Input `"2 3"` returns `["claude"]` with a warning (single non-digit
+  token; must **not** be parsed as `23`).
 
 Existing init tests that mock `_prompt_platforms` remain unchanged.
 
@@ -143,8 +160,9 @@ assets already use "platform" (`_prompt_platforms`, `PLATFORM_FILES`,
 
 - Flag: `--platforms KEYS` on the existing `init` parser in
   `src/reinicorn/cli.py`.
-- `KEYS` is a comma-separated list of platform keys (whitespace around
-  commas allowed), e.g. `claude,cursor` or `codex`.
+- `KEYS` is a comma-separated list of platform keys using the **same**
+  split-then-strip-per-token rule as §3 (e.g. `claude, cursor` is fine;
+  do not strip spaces before splitting).
 - Omitted → interactive `_prompt_platforms()` as today (with the new UX).
 - Present → do not call `_prompt_platforms()`; use the parsed key list.
 
