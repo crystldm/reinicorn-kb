@@ -26,6 +26,11 @@ keeping Claude". Select-set semantics match that intuition better.
 Reinicorn has zero runtime dependencies, so a real interactive multi-select
 library is out of scope for this fix.
 
+`rcorn init` already has non-interactive escapes for the kb-source step
+(`--kb-url`, `--local`, `--create-remote`), but `_setup_assets` always
+calls `_prompt_platforms()`. Scripts, CI, and agents still cannot complete
+init without a TTY answer for platforms.
+
 ## Design Goals
 
 - The platform prompt must not look like an interactive checkbox TUI.
@@ -34,6 +39,8 @@ library is out of scope for this fix.
   defaults.
 - Prompt copy must state that model in plain language (no "toggle").
 - Defaults remain visible in the prompt line (today: Claude Code only).
+- `rcorn init --platforms <keys>` skips the interactive platform step
+  (same role `--kb-url` plays for kb source).
 - Zero new runtime dependencies.
 - Once a selection is chosen, install behavior for those platforms is
   unchanged.
@@ -125,14 +132,62 @@ captures stdout/stderr, asserting:
 
 Existing init tests that mock `_prompt_platforms` remain unchanged.
 
+### 5. `--platforms` flag (non-interactive escape)
+
+Add `rcorn init --platforms <keys>` so init can skip `_prompt_platforms`
+entirely. Naming is **`--platforms`**, not `--harnesses`: the code and
+assets already use "platform" (`_prompt_platforms`, `PLATFORM_FILES`,
+`PLATFORM_TEMPLATES`, `platform-instructions/`).
+
+**CLI**
+
+- Flag: `--platforms KEYS` on the existing `init` parser in
+  `src/reinicorn/cli.py`.
+- `KEYS` is a comma-separated list of platform keys (whitespace around
+  commas allowed), e.g. `claude,cursor` or `codex`.
+- Omitted → interactive `_prompt_platforms()` as today (with the new UX).
+- Present → do not call `_prompt_platforms()`; use the parsed key list.
+
+**Validation (boundary)**
+
+Validate at the CLI / `cmd_init` boundary before asset setup:
+
+- Each key must be one of the known option keys:
+  `claude`, `cursor`, `copilot`, `codex`.
+- Unknown keys → hard error via `console.error` (what / which key / known
+  keys), return non-zero. Do **not** warn-and-continue like the
+  interactive discard path — a bad flag is a caller bug.
+- Duplicates are deduped; order follows the canonical option-list order,
+  not the flag order.
+- Empty value (`--platforms ''` or `--platforms` with empty string) means
+  "install no platform instruction files" (`[]`) — valid, matches today’s
+  empty selection.
+
+**Plumbing**
+
+- Thread `platforms: list[str] | None` through `cmd_init` →
+  `_setup_assets`. When `None`, prompt; when a list (including empty),
+  install that list.
+- Teammate-clone path that only installs hooks (manifest already present)
+  is unchanged — it never prompts for platforms today.
+
+**Tests**
+
+- `--platforms cursor` skips the prompt (mock `input` unused / not called)
+  and installs Cursor instructions.
+- `--platforms nope` fails with a non-zero exit and an error naming the
+  unknown key.
+- Omitting the flag still reaches `_prompt_platforms` (covered by existing
+  mocks / the unit tests above).
+
 ## Non-Goals
 
 - No interactive TUI (arrow keys, space toggle, cursor libraries).
 - No new runtime dependencies (`questionary`, `rich`, etc.).
-- No `--platforms` CLI flag or non-interactive init path in this change.
+- No `--harnesses` alias (use `--platforms`).
 - No rewrite of other init prompts (`_prompt_kb_source`, gh auth, etc.),
   except that this prompt should remain stylistically consistent with them.
 - No change to which platform instruction files are generated once a
   selection is chosen.
-- No re-prompt loop on invalid input — warn and continue (defaults or
-  partial valid set), do not ask again.
+- No re-prompt loop on invalid interactive input — warn and continue
+  (defaults or partial valid set), do not ask again.
