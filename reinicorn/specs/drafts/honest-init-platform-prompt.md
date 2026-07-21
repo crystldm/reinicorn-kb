@@ -75,36 +75,53 @@ No per-row selected/unselected decoration in the list. Do not use the word
 
 Replace toggle semantics with select-set:
 
-- Empty input (after strip) → return the default-selected platform keys.
+- Empty input (after strip) → return the default-selected platform keys
+  (no warning — this is the intentional confirm-defaults path).
 - Non-empty input → split on commas (whitespace stripped); collect each
   digit token whose index is in range as a selected option. Deduplicate;
   return keys in option-list order (not input order).
-- Non-digit / out-of-range tokens are ignored.
-- If the input was non-empty but yielded no valid indices, fall back to
-  defaults (same forgiving "ignore junk" spirit as today).
+- Non-digit / out-of-range tokens are discarded, but **not silently**:
+  print a warning via `console.warn` that names the discarded token(s).
+- If the input was non-empty but yielded no valid indices, print that
+  warning and fall back to defaults (still no re-prompt loop).
+
+Warning copy must say what was discarded and what was kept, e.g.:
+
+- `abc` → warn that the input was ignored and defaults are used
+  (`Claude Code`).
+- `1,abc,9` → warn that `abc` and `9` were ignored; selection is still
+  `["claude"]` from the valid token.
+
+Use the existing `reinicorn.console.warn` helper (stderr progress/debug
+surface is fine; the point is a human/agent-visible line, not silence).
 
 Examples with today’s defaults:
 
-| Input | Result |
-|-------|--------|
-| `` (Enter) | `["claude"]` |
-| `2` | `["cursor"]` |
-| `1,2` | `["claude", "cursor"]` |
-| `2,4` | `["cursor", "codex"]` |
-| `abc` | `["claude"]` (no valid indices → defaults) |
+| Input | Result | Warning? |
+|-------|--------|----------|
+| `` (Enter) | `["claude"]` | no |
+| `2` | `["cursor"]` | no |
+| `1,2` | `["claude", "cursor"]` | no |
+| `2,4` | `["cursor", "codex"]` | no |
+| `abc` | `["claude"]` (defaults) | yes — input discarded |
+| `1,abc,9` | `["claude"]` | yes — `abc`, `9` discarded |
 
 ### 4. Tests
 
 Add a focused unit test for `_prompt_platforms` that mocks `input` and
-captures stdout, asserting:
+captures stdout/stderr, asserting:
 
 - Output does not contain `[x]` or `[ ]` checkbox markers.
 - Output prompt uses select wording (e.g. contains `select` / `default`,
   does not contain `toggle` case-insensitively).
 - Empty input returns the default selection (`["claude"]` with today’s
-  defaults).
+  defaults) and emits no discard warning.
 - Input `"2"` returns `["cursor"]` only (select-set, not toggle).
 - Input `"1,2"` returns `["claude", "cursor"]`.
+- Input `"abc"` returns `["claude"]` and emits a warning that the input
+  was discarded / defaults apply.
+- Input `"1,abc"` returns `["claude"]` and emits a warning mentioning
+  the discarded token.
 
 Existing init tests that mock `_prompt_platforms` remain unchanged.
 
@@ -117,4 +134,5 @@ Existing init tests that mock `_prompt_platforms` remain unchanged.
   except that this prompt should remain stylistically consistent with them.
 - No change to which platform instruction files are generated once a
   selection is chosen.
-- No re-prompt loop on invalid input beyond the forgiving fallback above.
+- No re-prompt loop on invalid input — warn and continue (defaults or
+  partial valid set), do not ask again.
