@@ -189,3 +189,18 @@ sub.add_parser("attach", help="(deprecated: use 'init')")
      hand-rolled AST checks are the fallback for what ruff can't express).
    - Prevents: parallel copies of type knowledge drifting apart when a doc
      type is added or a path pattern changes.
+
+14. **Verify against the full gate, not a subset**
+   - Before claiming work complete/passing/PR-ready — including when a
+     subagent reports back — run the exact checks CI gates on
+     (`uv run ruff check src/reinicorn tests`, `uv run pyright src/reinicorn`,
+     `uv run pytest tests/`, plus the kb/architecture lints) and cite the
+     output. A subset chosen by "which files I think I touched" is not
+     verification: a change's blast radius is unknown until the whole suite
+     runs. When delegating, instruct the subagent to run the full gate, never
+     a hand-picked file.
+   - Prevents: green-locally/red-in-CI round trips and false "done" claims —
+     e.g. a `.claude/settings.json` edit "verified" with `test_git.py` while
+     its actual test (`test_source_editor_integrations.py`) never ran.
+   - Enforcement: CI required checks today; a Reinicorn-managed pre-push gate
+     is planned (see idea: managed principle enforcement).
