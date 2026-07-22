@@ -144,6 +144,24 @@ related`.
 required core fields set, `type`/`lifecycle` within their enums, per-type
 required fields present. Build fails on any error.
 
+## Open Questions (for contributor review)
+
+These are deliberately left open for reviewer feedback rather than frozen here:
+
+1. **Lifecycle mapping.** Do the coarse `active/done/dropped` buckets and the
+   per-type word mappings (esp. `planning`/`in-progress` → `active`, `approved`
+   → `active`) match how each doc type is actually used? Any type that needs a
+   fourth lifecycle value?
+2. **Per-type link fields.** The `spec:`/`retro:` (plan), `promoted_to:`
+   (idea), `supersedes:`/`superseded_by:`/`implemented_by:` (spec) fields seed
+   the `related` graph but are speculative. Keep all, trim, or defer until a
+   consumer needs them?
+3. **Migration strategy.** One-shot rewrite of every existing kb doc vs.
+   incremental / new-docs-first with a compatibility shim in `frontmatter.py`
+   that still reads the legacy prose block during a transition window.
+4. **Enum strictness.** Should `type` and `lifecycle` be hard-failed by
+   `lint-kb`, or warn-only for a grace period after rollout?
+
 ## Non-Goals
 
 - No new doc *types* — only a schema for the existing seven.
