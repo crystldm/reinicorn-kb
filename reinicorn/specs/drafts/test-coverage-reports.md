@@ -131,7 +131,7 @@ run. They are added to `.gitignore` under the existing "Test caches" heading.
 ### 5. Contributor documentation
 
 `CONTRIBUTING.md` documents that `uv run pytest` reports coverage, states the
-85% floor, and notes that CI publishes the table to the job summary. This is
+84% floor, and notes that CI publishes the table to the job summary. This is
 the file that already tells contributors `pytest`, `ruff`, and `pyright` must
 be green before review.
 
