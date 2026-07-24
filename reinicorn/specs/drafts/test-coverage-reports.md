@@ -2,9 +2,10 @@
 
 **Date:** 2026-07-24
 **Author:** Michael Biehl
-**Status:** draft
+**Status:** in-review
 **Origin:** ai-assisted
 **Human-validated:** false
+**Review-PR:** https://github.com/crystldm/reinicorn-kb/pull/4
 
 ## Problem
 
