@@ -9,7 +9,7 @@
 
 ## Problem
 
-The suite has 669 tests across `tests/`, and `.github/workflows/test.yml`
+The suite has 702 tests across `tests/`, and `.github/workflows/test.yml`
 runs `ruff`, `pyright`, and `pytest` on every push and pull request. Nothing
 measures how much of `src/reinicorn` those tests actually exercise.
 
@@ -20,14 +20,16 @@ Consequences today:
 - No way to see which parts of the CLI are thin on coverage when deciding
   where to spend test effort.
 - An ad-hoc measurement (`uv run --with pytest-cov pytest --cov=src/reinicorn`)
-  puts the project at **87%** statement coverage (3355 statements, 421
-  missed), or **84.78%** once branch coverage is on. Either way the number is
-  invisible unless someone runs it by hand, and it can silently drift.
+  puts the project at **85.69%** with branch coverage on (3436 statements,
+  406 missed; 1176 branches, 184 partial). Statement-only coverage reports a
+  flattering **86–87%** for the same suite, because it counts a half-taken
+  `if` as fully covered. Either way the number is invisible unless someone
+  runs it by hand, and it can silently drift.
 
-The weakest areas from that ad-hoc run are `linter/runner.py` (45%),
-`commands/lint.py` (0%), and `commands/kb_manage.py` (74%). Those are
-findings, not part of this change — this spec is about the measurement
-infrastructure, not about raising the number.
+The weakest areas are `commands/lint.py` (0%), `linter/runner.py` (45%), and
+`commands/kb_manage.py` (76%). Those are findings, not part of this change —
+this spec is about the measurement infrastructure, not about raising the
+number.
 
 ## Design Goals
 
@@ -78,7 +80,7 @@ coverage would call a half-taken `if` fully covered.
 `[tool.coverage.report]` sets the floor and the exclusions:
 
 ```
-fail_under = 84
+fail_under = 85
 show_missing = true
 exclude_also = [
     "if TYPE_CHECKING:",
@@ -87,7 +89,7 @@ exclude_also = [
 ]
 ```
 
-`fail_under = 84` sits just under today's 84.78% branch-coverage total. It
+`fail_under = 85` sits just under today's 85.69% branch-coverage total. It
 catches a real regression without failing on the sub-1% noise of a normal PR.
 It is a ratchet: raise it as coverage rises, never lower it to make a red
 build green.
@@ -131,7 +133,7 @@ run. They are added to `.gitignore` under the existing "Test caches" heading.
 ### 5. Contributor documentation
 
 `CONTRIBUTING.md` documents that `uv run pytest` reports coverage, states the
-84% floor, and notes that CI publishes the table to the job summary. This is
+85% floor, and notes that CI publishes the table to the job summary. This is
 the file that already tells contributors `pytest`, `ruff`, and `pyright` must
 be green before review.
 

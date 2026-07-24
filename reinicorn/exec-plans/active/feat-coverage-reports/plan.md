@@ -8,11 +8,11 @@
 ## Goal
 Measure test coverage of `src/reinicorn` on every local and CI test run,
 publish the per-file breakdown to the GitHub Actions job summary, and fail
-CI below an 84% floor. Spec: `specs/test-coverage-reports.md`.
+CI below an 85% floor. Spec: `specs/test-coverage-reports.md`.
 
 ## Acceptance Criteria
 - [ ] `uv run pytest` prints a coverage summary with no extra flags
-- [ ] Total coverage below 84% fails the test run (locally and in CI)
+- [ ] Total coverage below 85% fails the test run (locally and in CI)
 - [ ] CI job summary shows the per-file coverage table, including on failure
 - [ ] CI uploads a browsable `htmlcov/` artifact
 - [ ] No third-party coverage service, no secrets, no new runtime dependency
@@ -26,7 +26,7 @@ CI below an 84% floor. Spec: `specs/test-coverage-reports.md`.
   source-tree and installed-wheel runs report identically.
 - Branch coverage on — the CLI is conditional-heavy and statement-only
   coverage would over-report.
-- `fail_under = 84` is a ratchet just under today's measured 84.78% (87%
+- `fail_under = 85` is a ratchet just under today's measured 85.69% (87%
   statement-only, but branch coverage is the honest number): catches a real
   regression, tolerates sub-1% noise. Raise over time, never lower.
 - CI reporting stays in-repo (job summary + artifact). Codecov was
