@@ -3,7 +3,7 @@
 **Ticket:** N/A
 **Author:** Michael Biehl
 **Created:** 2026-07-24
-**Status:** planning
+**Status:** complete
 
 ## Goal
 Measure test coverage of `src/reinicorn` on every local and CI test run,
