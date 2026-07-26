@@ -25,7 +25,7 @@ Three separate defects let it through:
 `(?<![\w/])kb/[\w./-]+\.md`, so it sees a reference only when it is written as
 `kb/<scope>/specs/…`. Verified against the current rule:
 
-```
+```text
 'Spec: `specs/test-coverage-reports.md`.'                   -> []
 'Spec: `reinicorn/specs/drafts/x.md`'                       -> []
 'Spec: kb/reinicorn/specs/drafts/test-coverage-reports.md'  -> ['kb/reinicorn/…']
@@ -63,6 +63,9 @@ in `kb/`, a far cheaper mistake — the stronger guard is on the smaller problem
 - A reference to an unapproved spec is caught **however it is written** —
   `kb/`-prefixed, kb-relative, or scope-relative — and whether it names the
   draft location or the future approved one.
+- Every path referenced in a doc's frontmatter must be **known to git**. A
+  reference that no tracked kb path can satisfy is itself a finding, so typos and
+  stale references cannot pass as "nothing to check".
 - Omitting the reference must not be a way to dodge the gate; the only escape is
   an explicit, reviewable one.
 - The gate fails the Lint Kb workflow, not just `rcorn kb lint`'s output.
@@ -79,7 +82,7 @@ in `kb/`, a far cheaper mistake — the stronger guard is on the smaller problem
 
 Add a `Spec` header field to `kb/reinicorn/exec-plans/_template/plan.md`:
 
-```
+```markdown
 **Ticket:** [TICKET-ID or N/A]
 **Spec:** [kb path to the spec this implements, or N/A]
 **Author:** [developer or agent]
@@ -120,21 +123,54 @@ _REF_RE = re.compile(
 This matches `specs/x.md`, `reinicorn/specs/drafts/x.md` and
 `kb/reinicorn/specs/x.md`, and ignores unrelated `.md` paths in prose.
 
-**Resolution.** A reference is resolved against, in order: `project_root/<ref>`
-when it is `kb/`-prefixed; `kb/<ref>` (kb-relative); `kb/<scope>/<ref>` where
-`<scope>` is the plan's own repo-scope directory (scope-relative). The first
-candidate that exists wins.
+**Resolution is against git, not the filesystem.** Every path referenced in
+frontmatter must be known to git. Build the kb's tracked-path set once per lint
+run — `git -C kb ls-files -z` via the existing `run_git` plumbing — and resolve
+references by exact lookup into that set rather than by probing the filesystem.
 
-**Drafts fallback — the second-order miss.** If a reference resolves under a
-gated doc type's directory and no file exists at that path, retry with
-`drafts/` inserted before the filename. A plan citing `specs/<slug>.md` while
-only `specs/drafts/<slug>.md` exists therefore resolves to the draft and is
-reported. This is what closes the case the current rule misses.
+This is both cheaper and stricter than stat-ing candidates, and it disposes of
+two problems by construction:
+
+- **Containment.** `git ls-files` only ever emits repo-relative paths under the
+  kb root. A reference containing `..`, an absolute path, or anything outside the
+  kb simply fails to match — there is no traversal to defend against, because no
+  attacker-controlled string is ever joined onto a filesystem path before it has
+  been proven to be a tracked kb file.
+- **Untracked files.** A doc that exists on disk but was never committed is not a
+  real reference. Git is the authority the review lane already runs on, so the
+  lint agrees with what a reviewer would actually see on the branch.
+
+**Candidate forms.** A reference is interpreted three ways, and each is looked up
+in the tracked set:
+
+1. `kb/`-prefixed — strip the `kb/` prefix, look up the remainder.
+2. kb-relative — `reinicorn/specs/x.md`, look up as written.
+3. scope-relative — `specs/x.md`, prefixed with the plan's own repo-scope
+   directory: `<scope>/specs/x.md`.
+
+**Precedence and ambiguity.** Evaluate all three; collect the distinct tracked
+paths they hit. Exactly one distinct hit resolves. More than one distinct hit is
+an **ambiguity diagnostic** naming every candidate — the rule never silently
+picks a winner, because guessing is how the original bug was born. Zero hits is
+an **unresolved-reference diagnostic**: a plan whose declared spec matches no
+tracked kb path is a finding, not a pass. This closes the `Spec: specs/typo.md`
+hole where a misspelling would otherwise sail through both checks.
+
+**Drafts fallback — the second-order miss.** When none of the three forms hits a
+tracked path, retry each with `drafts/` inserted before the filename. A plan
+citing `specs/<slug>.md` while only `specs/drafts/<slug>.md` is tracked
+therefore resolves to the draft and is reported. The fallback runs *only* after
+exact lookup fails, so a reference to a genuinely approved `specs/x.md` still
+resolves to the approved doc even when a same-named draft is also tracked.
 
 **Diagnosis** is unchanged in shape: report when the resolved path sits under
 `drafts/`, or when the resolved file's `Status` is `draft` or `in-review`.
 `draft` is added to the existing `in-review` check because a plan built on a
 never-submitted draft is the same violation.
+
+**Generalization.** The tracked-path check is not `Spec`-specific: any frontmatter
+field whose value is a path is validated the same way. `Spec` is the only such
+field today, but the helper takes a field name so the next one is free.
 
 ### 3. `kb/plan-structure`: require the field
 
@@ -181,6 +217,13 @@ bricks every push in the repo is worse than a missed policy warning. An
 unexpected exception here warns and returns 0. This is a deliberate asymmetry
 between the two checks in the same file and should be commented as such.
 
+**Fail-open must be loud.** A gate that degrades silently is indistinguishable
+from a gate that was never wired up — which is precisely the failure mode of the
+`reins`-era hooks in #24. The exception path prints a warning naming the branch,
+the plan path, and the exception, and says plainly that the approval gate did not
+run. A regression that disables the gate must be visible in the push output, not
+inferred later by inspection.
+
 ### 6. Next-step hints carry the gate
 
 Small wording changes so the CLI stops presenting an unapproved spec as a neutral
@@ -213,8 +256,17 @@ scope tighter.
 
 - `specs/x.md`, `reinicorn/specs/drafts/x.md` and `kb/reinicorn/specs/x.md` all
   resolve to the same doc and are all diagnosed when that doc is unapproved.
-- A plan citing `specs/<slug>.md` when only `specs/drafts/<slug>.md` exists is
-  reported — the second-order miss from the incident.
+- A plan citing `specs/<slug>.md` when only `specs/drafts/<slug>.md` is tracked
+  is reported — the second-order miss from the incident.
+- A reference matching no tracked kb path (`Spec: specs/typo.md`) is reported as
+  unresolved, not silently passed.
+- A reference whose candidate forms hit two distinct tracked paths is reported as
+  ambiguous, naming both; the rule never picks one.
+- A doc present on disk but untracked does not satisfy a reference.
+- A reference containing `..`, or an absolute path, resolves to nothing and is
+  reported as unresolved — no filesystem access occurs for it.
+- A reference to an approved `specs/x.md` still resolves to the approved doc when
+  a same-named `specs/drafts/x.md` is also tracked.
 - A plan with no `**Spec:**` field, or with the template placeholder still in
   place, is reported by `draft-refs`.
 - A plan declaring `**Spec:** N/A` is exempt from the field check but still
@@ -229,7 +281,9 @@ scope tighter.
   spec, naming the doc and `rcorn review status`; `--no-verify` bypasses it.
 - `git push` is not blocked when the plan declares `N/A`, when the branch has no
   plan, when the spec is approved, or when mode is `incognito` / `disabled`.
-- An unexpected exception in the spec-approval gate warns and allows the push,
-  while `_ensure_kb_pushed` continues to fail closed.
-- Tests cover each path style, the drafts fallback, missing/placeholder/`N/A`
+- An unexpected exception in the spec-approval gate warns — naming the branch,
+  the plan, and the exception, and stating that the gate did not run — and allows
+  the push, while `_ensure_kb_pushed` continues to fail closed.
+- Tests cover each path style, the drafts fallback, unresolved and ambiguous
+  references, untracked files, traversal strings, missing/placeholder/`N/A`
   fields, the fence skip, the severity change, and every push-gate branch above.
