@@ -1,6 +1,7 @@
 # Execution Plan: feat/worktree-aware-kb-resolution
 
 **Ticket:** N/A
+**Spec:** specs/worktree-aware-kb-resolution.md
 **Author:** Michael Biehl
 **Created:** 2026-07-19
 **Status:** implemented — verified end-to-end (hook auto-init via alternates in a real worktree); awaiting code review + PR

@@ -1,6 +1,7 @@
 # Execution Plan: [Branch Name]
 
 **Ticket:** [TICKET-ID or N/A]
+**Spec:** [kb path to the spec this implements, or N/A]
 **Author:** [developer or agent]
 **Created:** [date]
 **Status:** [planning | in-progress | complete | abandoned]

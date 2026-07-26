@@ -1,6 +1,7 @@
 # Execution Plan: fix/retro-show-branch-discovery
 
 **Ticket:** N/A
+**Spec:** N/A
 **Author:** Michael Biehl
 **Created:** 2026-07-24
 **Status:** complete

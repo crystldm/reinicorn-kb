@@ -1,6 +1,7 @@
 # Execution Plan: test/lint-and-runner-coverage
 
 **Ticket:** N/A
+**Spec:** specs/test-coverage-reports.md
 **Author:** Michael Biehl
 **Created:** 2026-07-25
 **Status:** planning
