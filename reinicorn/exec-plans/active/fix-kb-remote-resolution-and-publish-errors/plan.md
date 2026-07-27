@@ -110,11 +110,30 @@ The six ad-hoc formats (`commands/review.py:79`, `submodule.py:124`,
 
 Enforcement: `tests/test_git_error_surface.py` walks the AST and fails if any
 module outside `git.py` (git) or `github.py` (gh — already single-seamed)
-reads a subprocess `.stderr`, including via `getattr`. Ruff cannot express
-this: TID251 bans imported names, and `result.stderr` is attribute access on a
-local. This is the third hand-rolled AST check, which is the threshold
-`test_source_of_truth.py` names — the file says so and says to port all three
-to semgrep rather than add a fourth.
+reads a subprocess `.stderr`, including via `getattr`. Approved modules are
+matched by root-relative path, never basename, so a future `commands/git.py`
+cannot borrow the exemption; the rule is exercised against a synthetic tree to
+prove it. Ruff cannot express this: TID251 bans imported names, and
+`result.stderr` is attribute access on a local. This is the third hand-rolled
+AST check, which is the threshold `test_source_of_truth.py` names — the file
+says so and says to port all three to semgrep rather than add a fourth.
+
+**Review round (PR #29).** Four findings, all valid:
+
+1. CodeQL flagged `"github.com" in args`; the assertion now pins the whole
+   argv, which is what its docstring claimed to guarantee anyway.
+2. `apply_kb_remote_url` reported nothing when `git remote set-url` failed and
+   its only caller discarded the result — the branch's own bug class. It now
+   returns `updated` / `unchanged` / `failed` (a bool conflated "already
+   right" with "could not set it"), reports through the seam, and
+   `post_checkout` says what a failure means without failing the checkout.
+3. `except (GitError, FileNotFoundError)` in `hooks_install` called every
+   nonzero exit "not inside a git repository". `classify_failure` gains a
+   `no-repo` class; only that earns the sentence, everything else goes to the
+   seam, and a missing git binary is named as such.
+4. `report_push_failure` gains `action=` and `warn=`, so the kb scope-removal
+   push gets the kb diagnosis (remote, protocol, classification-specific next
+   step) instead of the generic one, without turning a non-fatal step fatal.
 
 ## Tasks
 
