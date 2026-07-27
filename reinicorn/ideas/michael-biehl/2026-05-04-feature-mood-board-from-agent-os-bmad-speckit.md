@@ -1,8 +1,14 @@
-# Feature mood board — Agent OS, BMAD, SpecKit
+---
+type: idea
+title: Feature mood board — Agent OS, BMAD, SpecKit
+slug: 2026-05-04-feature-mood-board-from-agent-os-bmad-speckit
+lifecycle: active
+status: open
+created: 2026-05-04
+author: Michael Biehl
+---
 
-**Date:** 2026-05-04
-**Author:** Michael Biehl
-**Status:** open
+# Feature mood board — Agent OS, BMAD, SpecKit
 
 ## Description
 

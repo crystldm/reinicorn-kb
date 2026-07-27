@@ -1,11 +1,17 @@
-# Markdown linting: a docs/markdownlint rule and a config baseline
+---
+type: spec
+title: 'Markdown linting: a docs/markdownlint rule and a config baseline'
+slug: markdown-linting-a-docs-markdownlint-rule-and-a-config-basel
+lifecycle: active
+status: in-review
+created: 2026-07-26
+author: Michael Biehl
+origin: ai-assisted
+human_validated: false
+review_pr: https://github.com/crystldm/reinicorn-kb/pull/6
+---
 
-**Date:** 2026-07-26
-**Author:** Michael Biehl
-**Status:** in-review
-**Origin:** ai-assisted
-**Human-validated:** false
-**Review-PR:** https://github.com/crystldm/reinicorn-kb/pull/6
+# Markdown linting: a docs/markdownlint rule and a config baseline
 
 Closes #26.
 

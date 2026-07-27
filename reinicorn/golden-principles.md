@@ -1,3 +1,13 @@
+---
+type: principle
+title: Golden Principles
+slug: golden-principles
+lifecycle: active
+status: active
+created: 2026-07-17
+author: Michael Biehl
+---
+
 # Golden Principles
 
 These are **mechanical, enforceable rules** that keep the codebase legible for both humans and agents. They are stack-agnostic and apply universally.
@@ -40,7 +50,6 @@ Good: `Validation error in src/billing/service/create-invoice.ts:42 — "amount"
 **Why:** Agents parse error messages to determine next steps. Vague errors cause agents to guess, retry blindly, or ask the developer for help unnecessarily.
 
 ### 5. File size limits
-
 
 Files over **[THRESHOLD]** lines should be split into smaller, focused modules. When a file approaches the limit, refactor proactively rather than waiting for it to become unwieldy.
 
@@ -103,7 +112,6 @@ The goal is to make every golden principle enforceable by automation. For each p
 - Include the principle number in the error message so developers and agents can look up the rationale.
 - Add the lint rule to CI so violations block merges.
 - If a principle cannot be fully automated, add it to the PR review checklist in `.claude/skills/review-pr.md`.
-
 
 ---
 
