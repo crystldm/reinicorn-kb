@@ -2,11 +2,12 @@
 type: plan
 title: Fix Critical Security Vulnerabilities Implementation Plan
 slug: fix-security-critical-mvp
-lifecycle: done
-status: done
-created: 2026-07-17
+lifecycle: dropped
+status: abandoned
+created: 2026-03-24
 author: Michael Biehl
 branch: fix-security-critical-mvp
+ticket: N/A
 ---
 
 # Fix Critical Security Vulnerabilities Implementation Plan
@@ -22,11 +23,6 @@ branch: fix-security-critical-mvp
 ---
 
 ## Execution Plan: fix/security-critical-mvp
-
-**Ticket:** N/A
-**Author:** Michael Biehl
-**Created:** 2026-03-24
-**Status:** abandoned
 
 ## Acceptance Criteria
 - [ ] SEC-01: `REINS_AGENT_CMD` parsed as argv list, executed with `shell=False`

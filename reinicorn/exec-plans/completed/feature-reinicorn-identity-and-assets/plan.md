@@ -8,7 +8,7 @@ created: 2026-07-17
 author: Michael Biehl
 origin: ai-assisted
 branch: feature-reinicorn-identity-and-assets
-spec: kb/reins/specs/reinicorn-public-release-program-and-identity-migration.md` before Task 7; `kb/reinicorn/specs/reinicorn-public-release-program-and-identity-migration.md` after the KB scope cutover.
+spec: kb/reinicorn/specs/reinicorn-public-release-program-and-identity-migration.md
 ---
 
 # Reinicorn Identity and Asset Ownership Implementation Plan

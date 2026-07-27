@@ -174,7 +174,7 @@ Assumptions:
       1. **Body preservation (the safety property):** for every doc, the new
          body is byte-identical to the original text minus exactly the
          allow-listed header lines. Nothing else may move.
-      2. `frontmatter.validate()` returns `[]` for all 122 docs.
+      2. `frontmatter.validate()` returns `[]` for all 123 docs.
       3. `dumps(*parse(text)) == text` for every migrated file.
       4. `rcorn kb lint` green with `kb/frontmatter` at `error`.
       5. Human review of the kb PR diff.
