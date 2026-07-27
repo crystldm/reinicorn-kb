@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-24
 **Author:** Michael Biehl
-**Status:** in-review
+**Status:** approved
 **Origin:** ai-assisted
 **Human-validated:** false
 **Review-PR:** https://github.com/crystldm/reinicorn-kb/pull/4
@@ -39,9 +39,12 @@ number.
   pull request without downloading anything.
 - A browsable line-by-line HTML report is available from a CI run when a
   reviewer wants to dig in.
-- Coverage data does not leave the repository. No third-party service, no
-  upload token, no bot comment. This keeps forks and untrusted-PR runs
-  working with zero secrets.
+- Coverage data does not leave the repository for third-party services. No
+  external coverage service, no upload token, no bot comment. The generated
+  HTML report is uploaded as a GitHub Actions artifact, stored by GitHub and
+  accessible to anyone with read access to the repository Actions tab,
+  subject to GitHub's artifact retention policy (90 days default). This keeps
+  forks and untrusted-PR runs working with zero secrets.
 - Coverage measurement adds one dev dependency and no runtime dependency.
   Reinicorn ships with zero runtime dependencies and that does not change.
 
@@ -75,7 +78,7 @@ source tree or an installed wheel:
 ```toml
 source = ["reinicorn"]
 branch = true
-omit = ["src/reinicorn/_version.py"]
+omit = ["*/reinicorn/_version.py"]
 ```
 
 Branch coverage is on. The CLI is dense with conditionals, and statement-only
