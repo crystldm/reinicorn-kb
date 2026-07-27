@@ -23,6 +23,11 @@ Fix two defects found on 2026-07-27:
    conflicting changes", masking the auth failure above and suggesting a retry
    that loops forever.
 
+Then, on review, the class behind (2) rather than the instance: six modules
+each invented their own git-failure format, and two `contextlib.suppress`
+blocks discarded failures entirely — including the one that installed the
+broken remote in (1) with no signal at all.
+
 ## Acceptance Criteria
 
 - [x] A kb clone created by the post-checkout hook inherits `remote.origin.url`
@@ -42,6 +47,16 @@ Fix two defects found on 2026-07-27:
       concrete `rcorn kb git remote set-url` next step.
 - [x] No resolution logic is submodule-specific: everything lives behind one
       seam that [[remove-the-kb-submodule]] can keep unchanged.
+- [x] Exactly one module converts a git failure into text; every caller
+      describes what it was doing and delegates the wording.
+- [x] `run_git(check=True)` raises a `GitError` that carries cmd, exit code and
+      stderr, without breaking the documented `CalledProcessError` contract.
+- [x] Every `check=False` call site is triaged probe vs operation; probes stay
+      as they are, operations are surfaced.
+- [x] Neither `contextlib.suppress(Exception)` block discards a failure any
+      more, and neither hook can fail the user's checkout or merge.
+- [x] A structural test fails the build if a second module starts formatting
+      git's stderr on its own.
 - [x] Suite stays green and total coverage stays at or above the 87% floor.
 
 ## Approach
@@ -72,6 +87,35 @@ verbatim; only step 3 is deleted with `.gitmodules`.
 `commands/publish.py` and `commands/review.py::_push_kb_main` both call it, so
 the two lanes cannot drift apart again.
 
+**Defect 2, generalized — one seam, mechanically enforced.** The push
+classifier moves into `git.py` and becomes the general one:
+
+- `GitError(subprocess.CalledProcessError)`, raised by `run_git(check=True)`.
+  Subclassing keeps the error contract documented at the top of `review.py`
+  intact for every existing handler, and inherits cmd/returncode/stderr.
+- `classify_failure(stderr)` / `classify_result(result_or_error)` →
+  `auth` | `non-fast-forward` | `protected` | `unknown`.
+- `explain_failure(action, failure, detail=…)` → message lines, and
+  `report_failure(...)` → the same through `console`. `action` is what the
+  caller was doing ("push kb main"); every line of git's stderr is reproduced
+  under a `git:` prefix, and `unknown` gets no invented cause at all.
+- Headlines stay domain-free. "kb has conflicting changes. Resolve any
+  conflicts in kb/" is a *caller* detail line from `kb.py`, so git.py never
+  learns kb vocabulary.
+
+The six ad-hoc formats (`commands/review.py:79`, `submodule.py:124`,
+`commands/kb_manage.py:118`, `commands/sync.py:51`, `review.py:177`,
+`commands/init.py:280`) all become callers. `SubmoduleError` loses its
+`stderr` attribute; the whole diagnosis lives in the message.
+
+Enforcement: `tests/test_git_error_surface.py` walks the AST and fails if any
+module outside `git.py` (git) or `github.py` (gh — already single-seamed)
+reads a subprocess `.stderr`, including via `getattr`. Ruff cannot express
+this: TID251 bans imported names, and `result.stderr` is attribute access on a
+local. This is the third hand-rolled AST check, which is the threshold
+`test_source_of_truth.py` names — the file says so and says to port all three
+to semgrep rather than add a fourth.
+
 ## Tasks
 
 - [x] Red: tests for `resolve_kb_remote_url` (inherit, config, `.gitmodules`,
@@ -85,6 +129,21 @@ the two lanes cannot drift apart again.
 - [x] Red: tests for `classify_push_failure` over real git stderr strings and
       for `report_push_failure` output per class.
 - [x] Green: add both to `kb.py`; call from `publish.py` and `review.py`.
+- [x] Red: tests for `GitError`, `classify_failure`/`classify_result`,
+      `url_protocol`, `explain_failure`, `report_failure`.
+- [x] Green: add the seam to `git.py`; `run_git` raises `GitError`.
+- [x] Migrate the six ad-hoc formats and re-point their tests at the new
+      (stronger) assertions.
+- [x] Triage all 48 `run_git(..., check=False)` sites: 26 probes left alone,
+      7 operations routed through the seam, 2 returned to a surfacing caller,
+      13 deliberately best-effort and documented.
+- [x] Unwrap `post_checkout`'s `suppress(Exception)` into `_init_kb`, which
+      reports and returns rather than raising into the user's checkout.
+- [x] Unwrap `post_merge`'s `suppress(Exception)` (it wraps `cmd_plan_complete`,
+      not a git call) so a failed archive is reported, not silent.
+- [x] Surface `commit_kb`'s failed commit — it returned False identically to
+      "nothing to commit", so unsaved work looked like a no-op.
+- [x] Red-green the enforcement test; add `tests/test_git_error_surface.py`.
 - [x] Verify: pytest, ruff, pyright, `bash tests/run-all.sh`, coverage >= 87%.
 
 ## Dependencies
@@ -95,3 +154,10 @@ the two lanes cannot drift apart again.
   `.gitmodules` read is an explicitly-labelled fallback step that #8 removes.
 - Concurrent work on `src/reinicorn/frontmatter.py` / kb doc frontmatter — not
   touched here.
+- `ensure_kb_on_main()`'s unchecked `git checkout main` (`kb.py`) is an
+  unsurfaced operation left as-is on purpose: [[remove-the-kb-submodule]] §5
+  rewrites that function outright, and fixing it here would collide.
+- Follow-up, not done here: port the three hand-rolled AST checks
+  (`test_source_of_truth.py` ×2, `test_git_error_surface.py`) to semgrep or a
+  flake8 plugin. `linters/structural-tests/` already exists with a CI workflow
+  wired to it and is currently empty — a plausible home.
