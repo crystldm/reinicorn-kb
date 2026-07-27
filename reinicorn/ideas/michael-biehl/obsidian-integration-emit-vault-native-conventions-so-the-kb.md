@@ -168,6 +168,12 @@ up. All three touch [[unified-kb-doc-frontmatter-schema]].
 - **C — First-party Obsidian plugin (rejected).** High cost, full-trust
   security ask, unsandboxed, GUI-bound. No capability we need is unreachable
   via A+B.
+  - *Update 2026-07-27:* one candidate capability has since been identified —
+    commenting on **rendered** markdown and posting to a GitHub PR, which cannot
+    be emitted as a file convention. See
+    [[rendered-markdown-pr-review-via-obsidian]]. The conclusion still holds
+    (existing third-party plugins cover it; do not write one), but this is the
+    reserved exception firing.
 
 - **D — Agent-facing APIs / MCP / REST / CLI (rejected).** All GUI-bound;
   contradicts agent-native. Agents read the folder directly.
