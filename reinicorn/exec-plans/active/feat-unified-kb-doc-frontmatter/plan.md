@@ -116,6 +116,14 @@ Assumptions:
 - [ ] Scan **all** leading `**Key:** value` runs, not just the first —
       `_header_span` stops at a blank line, but tech-debt docs carry a second
       block (`**Severity:** / **Domain:** / **Remediation:**`).
+- [ ] **Do not slurp body prose.** A corpus probe (2026-07-27) found 47
+      distinct `**Key:**` names across the kb, most of them body prose —
+      `**Why:**`, `**Bad:**`, `**Good:**`, `**Decision:**`, `**Steps:**`,
+      `**Trigger:**`, `**Rules:**`, `**post-checkout:**`. Only a minority are
+      header fields. Keep `docmeta._header_span`'s anchor test (a run counts as
+      a header only if it contains `Date`/`Author`/`Created`/`Status`/`Origin`)
+      and port it into the migration, extended to accept a second run. Migrate
+      an explicit allow-list of header names; anything else stays in the body.
 - [ ] Map `Date`/`Created` → `created`, `Domain` → `category`; derive
       `lifecycle` from `status` per the spec's table, keeping `status` verbatim;
       `slug` from filename stem; `title` from H1 (H1 stays in the body).
@@ -153,9 +161,28 @@ Assumptions:
 
 ## Dependencies
 
-`spec/remove-kb-submodule` (kb PR #8, in-review) turns kb into an ordinary clone.
-It rewrites the same `submodules: recursive` checkout in `doc-gardening.yml` that
-task 4 edits, and collapses task 2's two-PR shape (kb PR + submodule pointer
-bump) into one. No logical conflict — task 4 changes *how the branch is read*,
-not how kb is checked out — but whichever lands second rebases. **Decide merge
-order before task 4 opens.**
+**Decided 2026-07-27: `spec/remove-kb-submodule` (kb PR #8) lands first. Build
+against the post-#8 world.**
+
+What that changes here:
+
+- **Task 2 loses its second PR.** With no submodule pointer, the migration is a
+  single PR against `crystldm/reinicorn-kb`; there is no pointer bump in this
+  repo to pair with it.
+- **Task 4 rebases onto a rewritten checkout.** #8 §9 drops
+  `submodules: recursive` from all four workflows and adds an explicit kb clone
+  step. The orphan-detection fix sits on top of that step rather than beside
+  `submodules: recursive`. The change itself is unaffected — it alters *how the
+  branch is read*, not how kb is checked out — but write it against the clone
+  step and expect to rebase if #8 slips.
+- **Tasks 1 and 3 are unaffected.** #8 §2 moves kb discovery behind
+  `get_kb_dir()`, and roughly twenty `commands/` call sites reach the kb through
+  `get_kb_dir()` / `require_kb_dir()` and need no edit. `frontmatter.py` and the
+  consumer repointing sit above that seam.
+- **Do not depend on `stage_kb_pointer()`.** #8 §6 deletes it and its four call
+  sites outright.
+
+Also in flight: `fix/kb-remote-resolution-and-publish-errors` — kb remote URL
+resolution and `push_main_with_retry` error classification. Touches `kb.py`,
+`post_checkout.py`, `submodule.py`. No overlap with this branch's files, but
+both land near #8's blast radius.
