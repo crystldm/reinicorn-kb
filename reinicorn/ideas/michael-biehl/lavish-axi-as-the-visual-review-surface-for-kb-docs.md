@@ -79,7 +79,8 @@ core feedback loop. TOON output and long polling for token efficiency.
    only, or also PRDs and exec-plans (where the "giant plan" problem is worst)?
 2. **Relationship to the GitHub PR lane.** Does lavish *replace* the kb PR for
    solo review, or run *before* it as a pre-PR iteration step? A public kb repo
-   still wants the PR as the audit trail.
+   still wants the PR as the audit trail. **Proposed answer: neither — it feeds
+   the PR.** See [[bridge-lavish-annotations-to-github-pr-reviews]].
 3. **Node dependency.** reinicorn is Python/uv. `npx` adds a Node runtime to a
    previously Node-free tool. Acceptable as an optional, lazily-invoked
    integration; not acceptable as a hard dependency in any agent code path — the

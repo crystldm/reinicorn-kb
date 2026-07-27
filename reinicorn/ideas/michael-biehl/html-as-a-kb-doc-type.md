@@ -95,7 +95,9 @@ the same plain-markdown substrate.
    pre-rendered for lavish's whiteboard feature to engage?
 4. Round-tripping is the hard part — can text-range annotations on rendered HTML
    be mapped back to source line ranges in the markdown reliably enough for an
-   agent to apply them without ambiguity?
+   agent to apply them without ambiguity? **A concrete answer is proposed in
+   [[bridge-lavish-annotations-to-github-pr-reviews]]** (markdown-it `token.map`
+   → `data-source-line`).
 5. Where do ephemeral artifacts live — scratch dir, `.reinicorn/`, or a cache
    under `~`? They must never land in the kb submodule.
 6. Does the lint lane need an explicit "no HTML docs" rule to keep the invariant
