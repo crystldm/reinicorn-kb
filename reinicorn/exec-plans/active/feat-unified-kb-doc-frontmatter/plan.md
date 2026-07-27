@@ -124,9 +124,35 @@ Assumptions:
       a header only if it contains `Date`/`Author`/`Created`/`Status`/`Origin`)
       and port it into the migration, extended to accept a second run. Migrate
       an explicit allow-list of header names; anything else stays in the body.
-- [ ] Map `Date`/`Created` → `created`, `Domain` → `category`; derive
-      `lifecycle` from `status` per the spec's table, keeping `status` verbatim;
-      `slug` from filename stem; `title` from H1 (H1 stays in the body).
+- [ ] Migrate this allow-list and **nothing else** — measured from the corpus
+      2026-07-27 by splitting `**Key:**` runs on whether they precede the first
+      `##` heading:
+
+      | legacy header field | → | occurrences |
+      | --- | --- | --- |
+      | `Status` | `status` (+ derived `lifecycle`) | 117 |
+      | `Author` | `author` | 114 |
+      | `Date`, `Created` | `created` | 115 |
+      | `Origin` | `origin` | 37 |
+      | `Human-validated` | `human_validated` | 36 |
+      | `Ticket` | `ticket` | 13 |
+      | `Spec` | `spec` | 8 |
+      | `Review-PR` | `review_pr` | 7 |
+      | `Severity`, `Domain`→`category`, `Remediation` | debt fields | 9 |
+      | `Branch` | `branch` | 2 |
+
+      Header-position names that must **stay in the body**: `Files` (26 — a
+      label introducing a list), `Goal` (7), `Architecture` (7), `Resolved`
+      (13), `Category` (5 — prose, not the debt enum), `Reference`, `PR`,
+      `Tester`, `License`, `Predecessor`, `Trigger`. Removing only allow-listed
+      lines from the header run keeps the rest in place.
+- [ ] Derive `lifecycle` from `status` per the spec's table, keeping `status`
+      verbatim; `slug` from filename stem; `title` from H1 (H1 stays in body).
+- [ ] **Exactly 4 docs need synthesis** (no anchored header):
+      `exec-plans/completed/{fix-security-critical-mvp,mvp-unified-attach,
+      skills-fork-template-docs}/plan.md` — type `plan`, `branch` from the dir
+      name, `lifecycle: done` (they are under `completed/`), `created`/`author`
+      from git history — and `golden-principles.md` (type `principle`).
 - [ ] `# Execution Plan: <branch>` → `branch:` field + a generic H1.
 - [ ] Unmapped legacy keys are reported and fail the run, never silently dropped.
 - [ ] 113 of 134 kb `.md` files carry a legacy block; the rest are excluded
