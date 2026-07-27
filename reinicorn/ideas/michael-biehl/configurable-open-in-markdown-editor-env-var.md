@@ -1,4 +1,4 @@
-# Configurable 'open in Markdown editor' env var for rcorn. Today docs presumably 
+# Configurable "open in Markdown editor" env var
 
 **Date:** 2026-07-27
 **Author:** Michael Biehl
@@ -10,4 +10,7 @@ Configurable 'open in Markdown editor' env var for rcorn. Today docs presumably 
 
 ## Notes
 
-_No additional notes yet._
+Related: [[obsidian-integration-emit-vault-native-conventions-so-the-kb]] — that
+idea keeps Obsidian read-mostly with authoring going through rcorn. This one is
+the complementary escape hatch: rcorn still owns doc creation, but the *editing*
+step can hand off to a GUI MD editor instead of the terminal `$EDITOR`.
