@@ -40,8 +40,9 @@ hook wiring was left out.
   session proceeds normally.
 - Structural tests lock the source repo's `.cursor/hooks.json`, tracked hook
   copies, and the install path so regressions are caught in CI.
-- Upgrading Reinicorn re-applies editor hook config automatically so users receive
-  new `sessionStart` entries without a manual step.
+- Upgrading Reinicorn re-applies editor hook config automatically — including
+  on `Already up to date` — so users receive new `sessionStart` entries without
+  a manual step.
 
 ## Design
 
@@ -206,24 +207,30 @@ Add to `tests/commands/test_hooks_install.py`:
 
 ### `rcorn update` integration
 
-After a successful asset sync in `cmd_update()` (`src/reinicorn/commands/update.py`),
-invoke `cmd_hooks_install()` automatically. Rationale:
+After every successful `cmd_update()` exit (`src/reinicorn/commands/update.py`),
+including the `Already up to date` early-return path, invoke
+`cmd_hooks_install()` automatically. Rationale:
 
-- `rcorn update` already syncs `editor-hooks/` → `.reinicorn/hooks/` via the
-  manifest, but does not merge entries into `.cursor/hooks.json`.
-- `hooks install` is idempotent and fast; running it after update ensures editor
-  config picks up new hook registrations (including `sessionStart`) without a
-  manual step.
-- On no-op update (`Already up to date`), skip the hooks re-run.
+- Manifest version matching does not guarantee `.cursor/hooks.json` already
+  has new hook registrations (e.g. user upgraded the package but never re-ran
+  hooks install).
+- `rcorn update` syncs `editor-hooks/` → `.reinicorn/hooks/` via the manifest
+  when versions differ, but never merges entries into `.cursor/hooks.json`.
+- `hooks install` is idempotent and fast; running it on every update ensures
+  editor config picks up new hook registrations (including `sessionStart`)
+  without a manual step.
 
-Add a test in `tests/commands/test_update.py` (or extend existing update tests):
-after update changes hook assets, `.cursor/hooks.json` gains `sessionStart`.
+Add tests in `tests/commands/test_update.py` (or extend existing update tests):
 
-Emit `next: rcorn hooks install` only when update skips the automatic re-run
-(e.g. error path) — not when it succeeds and hooks install ran inline.
+- After update changes hook assets, `.cursor/hooks.json` gains `sessionStart`.
+- On `Already up to date`, `cmd_hooks_install()` still runs and merges missing
+  `sessionStart` idempotently.
 
-Document in GETTING-STARTED.md: `rcorn update` re-applies editor hooks after
-syncing assets.
+Emit `next: rcorn hooks install` only on update error paths — not when update
+succeeds and hooks install ran inline.
+
+Document in GETTING-STARTED.md: `rcorn update` re-applies editor hooks (even
+when assets are already current).
 
 ### Platform instructions
 
@@ -262,8 +269,9 @@ get platform instructions; `rcorn hooks install` (run during init and after
       timeout, or missing `jq`.
 - [ ] Reinicorn source repo `.cursor/hooks.json` includes the `sessionStart`
       entry; `test_source_editor_integrations.py` passes.
-- [ ] `rcorn update` invokes `hooks install` after a successful asset sync;
-      integration test confirms `sessionStart` appears in `.cursor/hooks.json`.
+- [ ] `rcorn update` invokes `hooks install` after every successful exit,
+      including `Already up to date`; integration tests cover both asset-sync
+      and no-op paths.
 - [ ] `platform-instructions/cursor.md` and GETTING-STARTED.md document session
       bootstrap and the update path.
 - [ ] Manual smoke: open a new Cursor Agent session in this repo; compact
