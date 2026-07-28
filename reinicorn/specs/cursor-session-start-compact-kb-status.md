@@ -51,7 +51,7 @@ hook wiring was left out.
 Reuse the existing command and output contract from
 `src/reinicorn/commands/status.py::_compact_status()`:
 
-```
+```text
 reinicorn: branch main — no plan
 plans: 2 active in this repo scope
 overlap: none
@@ -160,7 +160,7 @@ only.
 
 The Reinicorn repo uses the same two-layer hook layout as consumer projects:
 
-```
+```text
 editor-hooks/session-start-status.sh   ← canonical source (packaged)
 .reinicorn/hooks/session-start-status.sh   ← tracked copy, byte-identical
 .cursor/hooks.json                       ← points at .reinicorn/hooks/
