@@ -33,9 +33,11 @@ hook wiring was left out.
 - Session-start script lives at a neutral path (`.reinicorn/hooks/`), not under
   `.cursor/`, consistent with multi-editor hook support.
 - Session start stays **local-reads-only and near-instant**: no kb fetch, no lint
-  suite, no stale-doc scan (same budget as `_compact_status()` and AXI decisions).
-- Script fails open: missing `uv`, non-Reinicorn repo, or CLI error → exit 0,
-  no context injected, session proceeds normally.
+  suite, no stale-doc scan, and no `uv run` env sync (same budget as
+  `_compact_status()` and AXI decisions).
+- Script fails open: missing preprovisioned `.venv/bin/rcorn`, `timeout`, or `jq`;
+  non-Reinicorn repo; CLI error or timeout → exit 0, no context injected,
+  session proceeds normally.
 - Structural tests lock the source repo's `.cursor/hooks.json`, tracked hook
   copies, and the install path so regressions are caught in CI.
 - Upgrading Reinicorn re-applies editor hook config automatically so users receive
@@ -71,9 +73,11 @@ injecting compact status into Cursor session context:
 # Inject rcorn kb status --compact into Cursor sessionStart context.
 set -euo pipefail
 
-command -v uv >/dev/null 2>&1 || exit 0
+RCORN=".venv/bin/rcorn"
+[ -x "$RCORN" ] || exit 0
+command -v timeout >/dev/null 2>&1 || exit 0
 
-context="$(uv run rcorn kb status --compact 2>/dev/null || true)"
+context="$(timeout 2s "$RCORN" kb status --compact 2>/dev/null || true)"
 [ -z "$context" ] && exit 0
 
 # Cursor sessionStart expects JSON with additional_context (not raw stdout).
@@ -84,6 +88,10 @@ else
   exit 0
 fi
 ```
+
+**Why `.venv/bin/rcorn` not `uv run`:** `uv run` syncs the project environment
+by default and can block on network or file locks. Session-start invokes the
+preprovisioned offline venv only, wrapped in a hard timeout.
 
 **Why a separate script from Claude's `session-start.sh`:** Claude's hook also
 kb-pulls, handles remote credential rewrite, runs `uv sync`, and calls
@@ -124,8 +132,8 @@ Notes:
 
 - `sessionStart` entries have no `matcher` (unlike `preToolUse`).
 - Path is relative to project root, matching existing PreToolUse convention.
-- Optional `timeout` is omitted; compact status must complete in well under one
-  second on a typical repo.
+- Optional Cursor `timeout` is omitted; the script uses `timeout 2s` around the
+  rcorn call.
 - **Multiple `sessionStart` hooks may coexist.** Cursor runs each entry in the
   array. Merge logic must **append** new entries and dedupe only by exact
   `command` path — never replace the whole `sessionStart` bucket. A future
@@ -172,17 +180,18 @@ Extend `tests/test_source_editor_integrations.py`:
   `.reinicorn/hooks/session-start-status.sh`.
 - Assert `test_source_hooks_match_package_owned_editor_hooks` covers the new
   script (byte match between `editor-hooks/` and `.reinicorn/hooks/`).
-- Assert the script calls `uv run rcorn kb status --compact`.
+- Assert the script invokes `.venv/bin/rcorn` via `timeout 2s` (not `uv run`).
 
 ### Shell unit test
 
 Add `tests/hooks/test_session_start_status.sh` (or pytest wrapper invoking bash)
 that exercises the script without a live Reinicorn repo:
 
-- **Happy path:** `PATH` includes a stub `uv` that prints known compact output;
-  assert stdout is valid JSON with `additional_context` containing that output.
-- **No uv:** assert exit 0, empty stdout.
-- **Empty context:** stub `uv` that prints nothing; assert exit 0, empty stdout.
+- **Happy path:** create a stub `.venv/bin/rcorn` that prints known compact
+  output; assert stdout is valid JSON with `additional_context` containing that
+  output.
+- **No venv:** assert exit 0, empty stdout.
+- **Empty context:** stub rcorn that prints nothing; assert exit 0, empty stdout.
 - **No jq:** assert exit 0, empty stdout (fail-open).
 
 Run via `tests/run-all.sh` / pytest as appropriate for shell tests in this repo.
@@ -227,7 +236,7 @@ Append to `platform-instructions/cursor.md` (installed by `rcorn init` as
 On each new Agent/Composer session, a `sessionStart` hook injects
 `rcorn kb status --compact` into context (branch, plan state, overlap, next
 step). Installed by `rcorn init` and refreshed by `rcorn update`. Requires
-Cursor 2.4+, `uv` on PATH, and `jq` for context injection.
+Cursor 2.4+, a provisioned `.venv` (`uv sync`), `timeout` (coreutils), and `jq`.
 ```
 
 Do not change Claude or Copilot platform instructions in this spec.
@@ -249,7 +258,8 @@ get platform instructions; `rcorn hooks install` (run during init and after
 - [ ] `test_hooks_install.py`: fresh repo gets `sessionStart` entry after
       `rcorn hooks install`; re-run is idempotent.
 - [ ] Shell test (`tests/hooks/test_session_start_status.sh`): valid JSON on
-      happy path; silent exit 0 without `uv`, empty context, or missing `jq`.
+      happy path; silent exit 0 without `.venv/bin/rcorn`, empty context,
+      timeout, or missing `jq`.
 - [ ] Reinicorn source repo `.cursor/hooks.json` includes the `sessionStart`
       entry; `test_source_editor_integrations.py` passes.
 - [ ] `rcorn update` invokes `hooks install` after a successful asset sync;
@@ -268,7 +278,8 @@ get platform instructions; `rcorn hooks install` (run during init and after
 | Known Cursor race where `additional_context` may not surface in some builds | Fail open; agents can still run `rcorn kb status --compact` manually; track upstream fix |
 | Cursor cloud/background agents may defer or skip `sessionStart` | Fail open; document that local Agent sessions are the primary target |
 | `jq` not installed | Fail open (no injection); PreToolUse hooks still require jq for enforcement — document both behaviors |
-| Hook runs on every new Composer session — latency | Reuse existing compact path; no network or O(docs) git operations |
+| Hook runs on every new Composer session — latency | Direct `.venv/bin/rcorn` with `timeout 2s`; no `uv run` sync, network, or O(docs) git operations |
+| `.venv` not provisioned | Fail open; run `uv sync` once during project setup |
 | Multiple `sessionStart` hooks — merge clobbers user entries | Dedupe by `command` path only; append, never replace the whole bucket |
 
 ## Non-Goals
