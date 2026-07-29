@@ -162,15 +162,16 @@ Assumptions:
       lines from the header run keeps the rest in place.
 - [ ] Derive `lifecycle` from `status` per the spec's table, keeping `status`
       verbatim; `slug` from filename stem; `title` from H1 (H1 stays in body).
-- [ ] **Exactly 4 docs need synthesis** (no anchored header):
-      `exec-plans/completed/{fix-security-critical-mvp,mvp-unified-attach,
-      skills-fork-template-docs}/plan.md` — type `plan`, `branch` from the dir
+- [ ] **5 docs need synthesis** (no anchored header): the four completed plans
+      `feature-cross-platform-support/plan.md`, `fix-security-critical-mvp/plan.md`,
+      `mvp-unified-attach/2026-02-19-mvp-unified-attach-plan.md`, and
+      `skills-fork-template-docs/plan.md` — type `plan`, `branch` from the dir
       name, `lifecycle: done` (they are under `completed/`), `created`/`author`
       from git history — and `golden-principles.md` (type `principle`).
 - [ ] `# Execution Plan: <branch>` → `branch:` field + a generic H1.
 - [ ] Unmapped legacy keys are reported and fail the run, never silently dropped.
 - [ ] **Verification moves from the script to its output.** A throwaway script
-      gets no unit tests; correctness is asserted on the 113 rewritten files:
+      gets no unit tests; correctness is asserted on the 118 rewritten files:
       1. **Body preservation (the safety property):** for every doc, the new
          body is byte-identical to the original text minus exactly the
          allow-listed header lines. Nothing else may move.
@@ -180,9 +181,9 @@ Assumptions:
       5. Human review of the kb PR diff.
       Run 1–3 as a checker script over the working tree *before* committing, so
       a bad rewrite never reaches a commit.
-- [ ] 113 of 134 kb `.md` files carry a legacy block; the rest are excluded
-      non-docs plus a few header-less plans that get frontmatter synthesized
-      from path + git history.
+- [ ] 118 of 144 kb `.md` files carry a legacy block; the rest are 21 excluded
+      non-docs plus the 5 header-less docs above, which get frontmatter
+      synthesized from path + git history. 118 + 5 = the 123 migrated docs.
 
 ### 3. Repoint consumers
 
