@@ -51,7 +51,7 @@ Good: `Validation error in src/billing/service/create-invoice.ts:42 — "amount"
 
 ### 5. File size limits
 
-Files over **[THRESHOLD]** lines should be split into smaller, focused modules. When a file approaches the limit, refactor proactively rather than waiting for it to become unwieldy.
+Files over **500** lines are a tripwire, not an automatic violation. Crossing the threshold triggers the cohesion question: can the file's single responsibility still be stated in one sentence, or has it accumulated unrelated reasons to change? If the answer is no, split it into smaller, focused modules — proactively, rather than waiting for it to become unwieldy.
 
 **Why:** Large files are hard for agents to reason about. Agent context windows are finite, and a 1,000-line file forces the agent to load significant content just to find the relevant section. Smaller files are easier to name, easier to navigate, and produce more targeted diffs.
 
