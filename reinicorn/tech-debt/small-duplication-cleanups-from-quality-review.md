@@ -1,14 +1,19 @@
+---
+type: debt
+title: Small duplication cleanups from quality review
+slug: small-duplication-cleanups-from-quality-review
+lifecycle: active
+status: draft
+created: 2026-07-27
+author: Michael Biehl
+origin: ai-assisted
+human_validated: false
+category: maintainability
+severity: low
+remediation: planned
+---
+
 # Small duplication cleanups from quality review
-
-**Date:** 2026-07-27
-**Author:** Michael Biehl
-**Status:** draft
-**Origin:** ai-assisted
-**Human-validated:** false
-
-**Severity:** low
-**Domain:** maintainability
-**Remediation:** planned
 
 ## Impact
 

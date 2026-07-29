@@ -1,11 +1,17 @@
-# Registry-driven doc types
+---
+type: spec
+title: Registry-driven doc types
+slug: registry-driven-doc-types
+lifecycle: active
+status: in-review
+created: 2026-07-27
+author: Michael Biehl
+origin: ai-assisted
+human_validated: false
+review_pr: https://github.com/crystldm/reinicorn-kb/pull/10
+---
 
-**Date:** 2026-07-27
-**Author:** Michael Biehl
-**Status:** in-review
-**Origin:** ai-assisted
-**Human-validated:** false
-**Review-PR:** https://github.com/crystldm/reinicorn-kb/pull/10
+# Registry-driven doc types
 
 ## Problem
 
