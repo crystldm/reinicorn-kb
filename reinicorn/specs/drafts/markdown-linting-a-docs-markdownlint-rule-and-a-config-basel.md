@@ -12,9 +12,11 @@ Closes #26.
 > **Revised 2026-07-28.** The original draft specified `markdownlint-cli2`.
 > This revision switches the tool to [rumdl](https://github.com/rvben/rumdl) and
 > re-measures everything against it. The rule is renamed `docs/markdown` so the
-> lint surface does not carry a vendor name. All numbers below were measured on
-> 2026-07-28 against 206 git-tracked markdown files (repo + kb, excluding
-> `presentation/`).
+> lint surface does not carry a vendor name. All numbers below were measured
+> against the same 206 git-tracked markdown files (repo + kb, excluding
+> `presentation/`), and re-verified 2026-07-29. Note that this spec is itself
+> in the corpus it measures, so the default-config total drifts by a few counts
+> as the doc is edited.
 
 ## Problem
 
@@ -39,7 +41,7 @@ Both tools were run against the same 206 files with an equivalent tuned config.
 | --- | --- | --- |
 | Violations (tuned) | 926 | 912 |
 | Of which identical (`file:line:rule`) | 844 | 844 |
-| Fixed by the tool's own `--fix` | 808 of 924 (87%) | 851 of 912 (93%) |
+| Fixed by the tool's own `--fix` | 810 of 926 (87%) | 851 of 912 (93%) |
 | Left for a human after `--fix` | 116 | 61 |
 | Wall clock, cold | 3.9 s (via `npx`) | 0.12 s |
 | Runtime dependency | node + npm | none (static binary) |
@@ -93,7 +95,7 @@ rumdl 0.2.44 over 206 markdown files:
 
 | Config | Violations |
 | --- | --- |
-| Default | 2,932 |
+| Default | 2,933 |
 | Tuned (below) | 912 |
 | — auto-fixable via `rumdl fmt` | 851 |
 | — needing human judgment | 61 (58 `MD076`, 3 `MD057`) |
@@ -101,11 +103,11 @@ rumdl 0.2.44 over 206 markdown files:
 Top offenders under the default config:
 
 ```text
-1870  MD013/line-length
- 469  MD032/blanks-around-lists
+1813  MD013/line-length
+ 452  MD032/blanks-around-lists
  197  MD036/no-emphasis-as-heading
  172  MD031/blanks-around-fences
- 114  MD040/fenced-code-language
+ 113  MD040/fenced-code-language
   58  MD076/list-item-spacing
   56  MD022/blanks-around-headings
    8  MD033/no-inline-html
@@ -115,12 +117,12 @@ Top offenders under the default config:
 
 The two largest rules fire on deliberate conventions, not defects. `MD036`
 (`no-emphasis-as-heading`, 197) hits the `**Bold lead-in.**` paragraph opener
-used throughout specs and skills. `MD013` (`line-length` at 80, 1,870) is
+used throughout specs and skills. `MD013` (`line-length` at 80, 1,813) is
 unmeetable for tables, code blocks, and long URLs, and at that volume is pure
 noise.
 
 Config is therefore a prerequisite, not polish. A rule shipped without one would
-report 2,932 violations on a clean checkout and be ignored within a day.
+report 2,933 violations on a clean checkout and be ignored within a day.
 
 ### Reinicorn's own generated stamp fails the lint — and the frontmatter migration already fixes it
 
@@ -169,7 +171,7 @@ the review PR.** It is now resolved, in the direction that removes scope.
 - Reinicorn stops emitting markdown that Reinicorn would reject.
 - Landing the rule does not turn `main` red, and does not require an 851-file
   diff to be reviewed alongside it.
-- Downstream projects that adopt Reinicorn inherit a working baseline, not 2,932
+- Downstream projects that adopt Reinicorn inherit a working baseline, not 2,933
   violations on day one.
 
 ## Design
@@ -186,7 +188,7 @@ exclude = ["node_modules", ".claude/worktrees", "presentation"]
 
 | Rule | Why disabled |
 | --- | --- |
-| `MD013` line-length | Unmeetable for tables/code/URLs; 1,870 hits |
+| `MD013` line-length | Unmeetable for tables/code/URLs; 1,813 hits |
 | `MD025` single-h1 | Frontmatter `title:` + body H1 is the schema's convention (§6) |
 | `MD033` no-inline-html | Inline HTML is used deliberately in docs |
 | `MD036` no-emphasis-as-heading | `**Bold lead-in.**` is house style |
@@ -223,8 +225,9 @@ Add `linters/rules/docs/markdown.sh`, modelled directly on
 
 1. Take `$PROJECT_ROOT` as `$1`, defaulting to the script's grandparent as
    shellcheck does.
-2. Resolve the tool: prefer `rumdl` on `PATH`, else `uv run rumdl`. If neither
-   resolves, print `rumdl not found — skipping. Install with: pip install rumdl`
+2. Resolve the tool: check for `rumdl` availability with `command -v rumdl`, or
+   try `uv run --no-sync rumdl --version` (treating failure as "not found"). If
+   unavailable, print `rumdl not found — skipping. Install with: pip install rumdl`
    and **exit 0** — matching shellcheck's absent-tool behavior exactly, so
    `rcorn kb lint` never hard-fails for a downstream user who has not installed
    it.
@@ -232,8 +235,21 @@ Add `linters/rules/docs/markdown.sh`, modelled directly on
    exclusions come from `.rumdl.toml`, not from a `find` invocation — unlike
    `shellcheck.sh`, the rule does not build its own file list. `kb/` is **not**
    excluded; the kb is the main thing worth linting here.
-4. Reformat rumdl's `path:line:col: [MDxxx] message` into the framework's
-   `path:line — [MDxxx] message`.
+4. Reformat rumdl's concise output into the framework's
+   `path:line — [MDxxx] message`. Verified against rumdl 0.2.44 — `concise`
+   emits `path:line:col: [MDxxx] message`, rule ID in brackets, identical to
+   `text` except that it drops the trailing `[*]` fixable marker:
+
+   ```text
+   README.md:77:1: [MD040] Code block (```) missing language
+   ```
+
+   becomes:
+
+   ```text
+   README.md:77 — [MD040] Code block (```) missing language
+   ```
+
 5. Exit 1 if any violation, 0 otherwise.
 
 The runner already discovers `linters/rules/**/*.sh` and derives the rule name
