@@ -10,4 +10,4 @@ Add 'rcorn <doctype> create from <other-doc>' e.g. 'rcorn spec create from <idea
 
 ## Notes
 
-_No additional notes yet._
+This melds perfectly with `rcorn plan create from <spec>` — the same graduation mechanism covers the whole pipeline: idea → spec → plan. Each step seeds the new doc from its source and links back, so `create from` becomes the uniform way a doc advances to the next stage.
