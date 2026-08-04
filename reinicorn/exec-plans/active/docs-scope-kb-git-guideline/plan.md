@@ -1,10 +1,17 @@
-# Execution Plan: docs/scope-kb-git-guideline
+---
+type: plan
+title: 'Execution Plan: docs/scope-kb-git-guideline'
+slug: docs-scope-kb-git-guideline
+lifecycle: active
+status: in-progress
+created: 2026-08-04
+author: Michael Biehl
+branch: docs/scope-kb-git-guideline
+ticket: N/A
+spec: N/A
+---
 
-**Ticket:** N/A
-**Spec:** N/A (mechanical doc clarification, no spec gate)
-**Author:** Michael Biehl
-**Created:** 2026-08-04
-**Status:** planning
+# Execution Plan: docs/scope-kb-git-guideline
 
 ## Goal
 Scope the AGENTS.md "use rcorn, never raw Git on the KB" guideline so it
