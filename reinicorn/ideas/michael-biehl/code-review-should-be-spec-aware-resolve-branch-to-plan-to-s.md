@@ -1,8 +1,14 @@
-# Code review should be spec-aware: resolve branch to plan to spec and review the
+---
+type: idea
+title: 'Code review should be spec-aware: resolve branch to plan to spec and review the'
+slug: code-review-should-be-spec-aware-resolve-branch-to-plan-to-s
+lifecycle: active
+status: new
+created: 2026-07-28
+author: Michael Biehl
+---
 
-**Date:** 2026-07-28
-**Author:** Michael Biehl
-**Status:** new
+# Code review should be spec-aware: resolve branch to plan to spec and review the
 
 ## Description
 

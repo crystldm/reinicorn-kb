@@ -1,8 +1,14 @@
-# Port the three hand-rolled AST structural tests to semgrep; linters/structural-t
+---
+type: idea
+title: Port the three hand-rolled AST structural tests to semgrep; linters/structural-t
+slug: port-the-three-hand-rolled-ast-structural-tests-to-semgrep-l
+lifecycle: active
+status: new
+created: 2026-07-27
+author: Michael Biehl
+---
 
-**Date:** 2026-07-27
-**Author:** Michael Biehl
-**Status:** new
+# Port the three hand-rolled AST structural tests to semgrep; linters/structural-t
 
 ## Description
 

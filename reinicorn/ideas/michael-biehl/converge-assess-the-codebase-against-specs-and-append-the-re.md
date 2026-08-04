@@ -1,11 +1,16 @@
+---
+type: idea
+title: 'Converge: assess the codebase against specs and append the remaining work — from SpecKit'
+slug: converge-assess-the-codebase-against-specs-and-append-the-re
+lifecycle: active
+status: new
+created: 2026-07-30
+author: Michael Biehl
+origin: ai-assisted
+human_validated: false
+---
+
 # Converge: assess the codebase against specs and append the remaining work — from SpecKit
-
-**Date:** 2026-07-30
-**Author:** Michael Biehl
-**Status:** new
-**Origin:** ai-assisted
-**Human-validated:** false
-
 ## Description
 
 SpecKit ships `/speckit.converge`: assess the codebase against the specs and

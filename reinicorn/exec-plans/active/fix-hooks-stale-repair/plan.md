@@ -1,11 +1,17 @@
+---
+type: plan
+title: 'Execution Plan: fix/hooks-stale-repair'
+slug: fix-hooks-stale-repair
+lifecycle: active
+status: in-progress
+created: 2026-07-31
+author: Michael Biehl
+branch: fix/hooks-stale-repair
+ticket: '[#24](https://github.com/crystldm/reinicorn/issues/24)'
+spec: N/A
+---
+
 # Execution Plan: fix/hooks-stale-repair
-
-**Ticket:** [#24](https://github.com/crystldm/reinicorn/issues/24)
-**Spec:** N/A
-**Author:** Michael Biehl
-**Created:** 2026-07-31
-**Status:** in-progress
-
 ## Goal
 
 Fix issue #24: `reins`-era git hooks silently no-op (the `command -v reins`

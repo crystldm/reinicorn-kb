@@ -1,11 +1,16 @@
+---
+type: idea
+title: Templates should ship in the tool, not the user's kb — from SpecKit
+slug: templates-should-ship-in-the-tool-not-the-user-s-kb-from-spe
+lifecycle: active
+status: new
+created: 2026-07-30
+author: Michael Biehl
+origin: ai-assisted
+human_validated: false
+---
+
 # Templates should ship in the tool, not the user's kb — from SpecKit
-
-**Date:** 2026-07-30
-**Author:** Michael Biehl
-**Status:** new
-**Origin:** ai-assisted
-**Human-validated:** false
-
 ## Description
 
 Reinicorn seeds doc templates into the user's kb at `rcorn init` (via

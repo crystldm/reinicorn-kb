@@ -1,11 +1,16 @@
+---
+type: idea
+title: Extension and preset discovery as a CLI surface — from SpecKit
+slug: extension-and-preset-discovery-as-a-cli-surface-from-speckit
+lifecycle: active
+status: new
+created: 2026-07-30
+author: Michael Biehl
+origin: ai-assisted
+human_validated: false
+---
+
 # Extension and preset discovery as a CLI surface — from SpecKit
-
-**Date:** 2026-07-30
-**Author:** Michael Biehl
-**Status:** new
-**Origin:** ai-assisted
-**Human-validated:** false
-
 ## Description
 
 SpecKit ships a full customization ecosystem as CLI surface:

@@ -1,11 +1,17 @@
+---
+type: plan
+title: 'Execution Plan: fix/path-scoped-create-commits'
+slug: fix-path-scoped-create-commits
+lifecycle: active
+status: in-progress
+created: 2026-07-31
+author: Michael Biehl
+branch: fix/path-scoped-create-commits
+ticket: '[#35](https://github.com/crystldm/reinicorn/issues/35)'
+spec: N/A
+---
+
 # Execution Plan: fix/path-scoped-create-commits
-
-**Ticket:** [#35](https://github.com/crystldm/reinicorn/issues/35)
-**Spec:** N/A
-**Author:** Michael Biehl
-**Created:** 2026-07-31
-**Status:** in-progress
-
 ## Goal
 
 Fix issue #35: per-artifact create commands (`idea create`, `spec/prd/debt/retro

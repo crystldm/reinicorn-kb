@@ -1,11 +1,16 @@
+---
+type: idea
+title: Guards as first-class verification artifacts attached to plans — from govctl
+slug: guards-as-first-class-verification-artifacts-attached-to-pla
+lifecycle: active
+status: new
+created: 2026-07-30
+author: Michael Biehl
+origin: ai-assisted
+human_validated: false
+---
+
 # Guards as first-class verification artifacts attached to plans — from govctl
-
-**Date:** 2026-07-30
-**Author:** Michael Biehl
-**Status:** new
-**Origin:** ai-assisted
-**Human-validated:** false
-
 ## Description
 
 govctl models **guards** as their own artifact type: `GUARD-*.toml` files
