@@ -3,7 +3,7 @@ type: spec
 title: 'Markdown linting: a docs/markdown rule and a config baseline'
 slug: markdown-linting-a-docs-markdownlint-rule-and-a-config-basel
 lifecycle: active
-status: in-review
+status: approved
 created: 2026-07-26
 author: Michael Biehl
 origin: ai-assisted
