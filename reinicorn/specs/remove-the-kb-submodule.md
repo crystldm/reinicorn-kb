@@ -1,3 +1,7 @@
+---
+status: approved
+review_pr: https://github.com/crystldm/reinicorn-kb/pull/8
+---
 # Remove the kb submodule
 
 **Date:** 2026-07-26
