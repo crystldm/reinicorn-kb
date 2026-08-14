@@ -61,3 +61,13 @@ Semgrep is a new dependency and a second rule language for three rules in a
 small codebase. Weigh that against three bespoke AST walkers that each need
 maintaining. A flake8 plugin keeps the toolchain Python-only but is more work
 to write. Decide before a fourth walker appears.
+
+### Decided 2026-08-14: opengrep, not semgrep
+
+The port happens via the golden-principle-enforcement spec (in review, kb#13),
+and the engine is opengrep — the LF-backed LGPL-2.1 fork of Semgrep CE. Same
+rule YAML, no telemetry, no commercial tier; all three rules are plain
+syntactic matching, so nothing depends on semgrep-only features. One
+integration difference: opengrep is not on PyPI, so CI pins a checksum-verified
+release binary instead of a pip dev dependency (docker-wrapped binary as
+fallback if installs prove problematic).

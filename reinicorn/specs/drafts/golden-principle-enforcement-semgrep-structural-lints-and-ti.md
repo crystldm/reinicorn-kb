@@ -1,6 +1,6 @@
 ---
 type: spec
-title: 'Golden principle enforcement: semgrep structural lints and TID251 seams'
+title: 'Golden principle enforcement: opengrep structural lints and TID251 seams'
 slug: golden-principle-enforcement-semgrep-structural-lints-and-ti
 lifecycle: active
 status: in-review
@@ -11,7 +11,7 @@ human_validated: false
 review_pr: https://github.com/crystldm/reinicorn-kb/pull/13
 ---
 
-# Golden principle enforcement: semgrep structural lints and TID251 seams
+# Golden principle enforcement: opengrep structural lints and TID251 seams
 
 ## Problem
 
@@ -35,8 +35,8 @@ Per this repo's promotion rule these become golden principles — but a principl
 ## Design Goals
 
 - Each new principle's mechanical core has enforcement that fails CI, not a convention that has to be remembered. Where a principle also carries a process half (P18's evidence citations), the split is stated explicitly in the principle text — no principle leaves enforcement ownership implicit.
-- Ruff-native (TID251) first; semgrep for what ruff cannot express; runtime pytest checks only where the rule needs imported objects (compiled regexes).
-- The three existing AST walkers are ported to semgrep, honoring the threshold note; no fourth hand-rolled walker is ever added.
+- Ruff-native (TID251) first; opengrep for what ruff cannot express; runtime pytest checks only where the rule needs imported objects (compiled regexes).
+- The three existing AST walkers are ported to opengrep, honoring the threshold note (which names semgrep; opengrep is the rule-compatible fork — see phase 2); no fourth hand-rolled walker is ever added.
 - Every rule's failure message cites the principle number and a fix (golden principle 4).
 - Escape hatches are explicit, tagged, and greppable — never silent.
 
@@ -56,10 +56,10 @@ Per this repo's promotion rule these become golden principles — but a principl
 
 - TID251 bans (pyproject.toml), each with a principle-citing msg:
   - `reinicorn.frontmatter.dumps` outside `frontmatter.py` — creation goes through the validating `render()` seam (P19).
-  - `shutil.rmtree` and `shutil.copy2` outside the owning destructive seam module, with the seam exempted via per-file-ignores — the same ban-plus-exemption mechanism the existing `sanitize_branch` confinement uses (P16). Method-call shapes on locals (`p.unlink()`, `p.rename()` out of `active/`) are **not** expressible in TID251 and are explicitly deferred to the phase-3 semgrep rule. Exact ban list fixed during implementation against real call sites.
+  - `shutil.rmtree` and `shutil.copy2` outside the owning destructive seam module, with the seam exempted via per-file-ignores — the same ban-plus-exemption mechanism the existing `sanitize_branch` confinement uses (P16). Method-call shapes on locals (`p.unlink()`, `p.rename()` out of `active/`) are **not** expressible in TID251 and are explicitly deferred to the phase-3 opengrep rule. Exact ban list fixed during implementation against real call sites.
   - The raw remote-URL getter outside `git.py`; `git.py` gains `display_url()` that strips userinfo, with a `user:token@host` fixture test (P20).
 - Literal-confinement checks in the P2 grep idiom (a small pytest, not an AST walker): `.gitmodules` may only appear in `git.py`; `--paginate` only in `github.py`, whose `gh_api_paginate()` owns page flattening (P18).
-- Runtime anchoring test: every module-level `re.Pattern` in gate modules (`linter/`, `hooks_health.py`, `commands/internal/spec_gate.py`, `commands/internal/post_merge.py`) must start `\A` and end `\Z`. `^`/`$` are **not** accepted as anchors: under `re.MULTILINE` they match line boundaries, so `"evil\nabc"` passes a `^abc$` check — the exact bypass shape P15 exists to kill, live in the checker itself if we allowed them. Escape hatch is a module-level `UNANCHORED_OK: dict[str, str]` mapping pattern name → reason (P15). This imports compiled objects, so pytest is the right layer, not semgrep.
+- Runtime anchoring test: every module-level `re.Pattern` in gate modules (`linter/`, `hooks_health.py`, `commands/internal/spec_gate.py`, `commands/internal/post_merge.py`) must start `\A` and end `\Z`. `^`/`$` are **not** accepted as anchors: under `re.MULTILINE` they match line boundaries, so `"evil\nabc"` passes a `^abc$` check — the exact bypass shape P15 exists to kill, live in the checker itself if we allowed them. Escape hatch is a module-level `UNANCHORED_OK: dict[str, str]` mapping pattern name → reason (P15). This imports compiled objects, so pytest is the right layer, not opengrep.
 
 - **P21** (no new tooling — pytest builds the real artifacts): extend the existing sdist-content regression test (inherited from private-era #43) to also build the wheel and assert required runtime assets are present (the #4 failure mode), and add a completeness test asserting the `rcorn update` sync-category list matches the canonical asset-source enumeration (the #42 failure mode).
 
@@ -75,18 +75,20 @@ A full audit of the 23 `re.` sites in `src/reinicorn` found two real defects, tw
 - **`UNANCHORED_OK` seed entries** (search-style by design, each with its reason): `hooks_health._REINS_DELEGATION` (staleness scan over whole hook text), `spec_refs.REF_RE` (prose reference finder), `validation._SCP_LIKE_RE` (transport-prefix check), `plan_structure`'s heading matcher (deliberate per-line `MULTILINE`).
 - Clean as-is: the `git.py` URL parsers (`.strip()`ed input, not gate modules), slugify/template substitutions, `feedback.py`'s HTML-comment stripper, `plan.py._EMPTY_RETRO_LINE`, `cross_links`' markdown-link finder (accepted lint-grade imprecision).
 
-### Phase 2 — semgrep adoption and walker port
+### Phase 2 — opengrep adoption and walker port
 
-- Add semgrep as a dev dependency; rules live in `linters/semgrep/`; runs in `tests/run-all.sh` and the CI lint job beside ruff.
+- The engine is **opengrep** (the LF-backed LGPL-2.1 fork of Semgrep CE), not semgrep: same rule YAML and JSON/SARIF output, no telemetry, no commercial tier, and deterministic output — which the phase-3 ratcheting baseline depends on. Every rule in this spec is plain syntactic matching, so nothing here uses semgrep-only features; the walker docstrings' "port to semgrep" threshold is honored by the compatible fork.
+- opengrep is not on PyPI — it ships as self-contained binaries. CI installs a pinned release with checksum verification; `tests/run-all.sh` runs `opengrep` from PATH and fails with a pointer to the install script when missing. Fallback if binary install proves problematic on some platform: a tiny docker image wrapping the same pinned binary.
+- Rules live in `linters/opengrep/`; runs in `tests/run-all.sh` and the CI lint job beside ruff.
 - Port the three existing walkers 1:1 (doc-type key comparisons, branch→path ownership, git/gh stderr seam), then delete the hand-rolled walkers.
-- Port is behavior-preserving, demonstrated by positive **and** negative fixtures under `linters/semgrep/tests/` covering the boundary cases the walkers actually pin, not just one seeded violation each: direct `result.stderr` access, the `getattr(r, "stderr")` evasion, doc-type key comparisons both bare and inside tuple/list/set literals, an allowlist entry written as a basename (must be flagged) vs root-relative path (must pass), and allowed usage inside each seam module (must not be flagged). The hand-written walkers are deleted only after every fixture passes under the semgrep rules.
+- Port is behavior-preserving, demonstrated by positive **and** negative fixtures under `linters/opengrep/tests/` covering the boundary cases the walkers actually pin, not just one seeded violation each: direct `result.stderr` access, the `getattr(r, "stderr")` evasion, doc-type key comparisons both bare and inside tuple/list/set literals, an allowlist entry written as a basename (must be flagged) vs root-relative path (must pass), and allowed usage inside each seam module (must not be flagged). The hand-written walkers are deleted only after every fixture passes under the opengrep rules.
 
-### Phase 3 — new semgrep rules
+### Phase 3 — new opengrep rules
 
 - **P15:** no `.name` equality/membership comparisons in enforcement or allowlist code paths.
 - **P16:** destructive filesystem calls confined to the seam module (widens the phase-1 TID251 slice to call shapes ruff cannot express).
 - **P17:** known per-item I/O calls (`read_text`, `frontmatter.read`, `run_git`, …) inside a `for` body must be wrapped by a `try` inside that loop, **and** the handler must call the shared `skip_item(item, exc)` helper (which emits the warning and continues). A `try` alone is not compliance: `except Exception: pass` and handlers that `return` or bare-`raise` abort or silence the batch and are flagged by the same rule. Probe-style loops opt out with a tagged `# per-item-ok:` comment.
-- Rules adopt with a ratcheting baseline: `linters/semgrep/baseline.json`, versioned in-repo, mapping rule id → sorted list of `path:fingerprint` entries for pre-existing violations. CI compares the branch's baseline against main's and fails if any entry was added; removals are the only permitted change (same policy as the coverage floor). A suppressed finding therefore cannot be introduced by editing the baseline in the same PR that introduces the violation.
+- Rules adopt with a ratcheting baseline: `linters/opengrep/baseline.json`, versioned in-repo, mapping rule id → sorted list of `path:fingerprint` entries for pre-existing violations. CI compares the branch's baseline against main's and fails if any entry was added; removals are the only permitted change (same policy as the coverage floor). A suppressed finding therefore cannot be introduced by editing the baseline in the same PR that introduces the violation.
 
 ### Phase 4 — tri-state verdicts on destructive paths
 
