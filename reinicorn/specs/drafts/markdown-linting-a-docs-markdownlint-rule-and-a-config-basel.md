@@ -47,7 +47,7 @@ Both tools were run against the same 206 files with an equivalent tuned config.
 | --- | --- | --- |
 | Violations (tuned) | 926 | 912 |
 | Of which identical (`file:line:rule`) | 844 | 844 |
-| Fixed by the tool's own `--fix` | 810 of 926 (87%) | 851 of 912 (93%) |
+| Fixed automatically (`--fix` / `rumdl fmt`) | 810 of 926 (87%) | 851 of 912 (93%) |
 | Left for a human after `--fix` | 116 | 61 |
 | Wall clock, cold | 3.9 s (via `npx`) | 0.12 s |
 | Runtime dependency | node + npm | none (static binary) |
@@ -231,13 +231,17 @@ Add `linters/rules/docs/markdown.sh`, modelled directly on
 
 1. Take `$PROJECT_ROOT` as `$1`, defaulting to the script's grandparent as
    shellcheck does.
-2. Resolve the tool: check for `rumdl` availability with `command -v rumdl`, or
-   try `uv run --no-sync rumdl --version` (treating failure as "not found"). If
-   unavailable, print `rumdl not found — skipping. Install with: pip install rumdl`
+2. Resolve the tool into a runner variable: if `command -v rumdl` succeeds the
+   runner is `rumdl`; otherwise, if `uv run --no-sync rumdl --version` succeeds
+   the runner is `uv run --no-sync rumdl` (treating failure as "not found").
+   The same wrapper must be reused for the `check` invocation in step 3 — in
+   the fallback path a bare `rumdl` is not on `PATH`. If neither resolves,
+   print `rumdl not found — skipping. Install with: pip install rumdl`
    and **exit 0** — matching shellcheck's absent-tool behavior exactly, so
    `rcorn kb lint` never hard-fails for a downstream user who has not installed
    it.
-3. Run `rumdl check --output-format concise "$PROJECT_ROOT"`. File selection and
+3. Run `check --output-format concise "$PROJECT_ROOT"` via the resolved
+   runner. File selection and
    exclusions come from `.rumdl.toml`, not from a `find` invocation — unlike
    `shellcheck.sh`, the rule does not build its own file list. `kb/` is **not**
    excluded; the kb is the main thing worth linting here.
