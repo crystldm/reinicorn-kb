@@ -1,15 +1,16 @@
 ---
+type: spec
+title: Remove the kb submodule
+slug: remove-the-kb-submodule
+lifecycle: active
 status: approved
+created: 2026-07-26
+author: Michael Biehl
+origin: ai-assisted
+human_validated: false
 review_pr: https://github.com/crystldm/reinicorn-kb/pull/8
 ---
 # Remove the kb submodule
-
-**Date:** 2026-07-26
-**Author:** Michael Biehl
-**Status:** in-review
-**Origin:** ai-assisted
-**Human-validated:** false
-**Review-PR:** https://github.com/crystldm/reinicorn-kb/pull/8
 
 ## Problem
 
