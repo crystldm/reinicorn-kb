@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: feat/remove-kb-submodule'
 slug: feat-remove-kb-submodule
-lifecycle: active
-status: planning
+lifecycle: done
+status: complete
 created: 2026-08-14
 author: Michael Biehl
 branch: feat/remove-kb-submodule
