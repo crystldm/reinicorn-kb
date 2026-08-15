@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: fix/kb-remote-resolution-and-publish-errors'
 slug: fix-kb-remote-resolution-and-publish-errors
-lifecycle: active
-status: in-progress
+lifecycle: done
+status: complete
 created: 2026-07-27
 author: Michael Biehl
 origin: ai-assisted
