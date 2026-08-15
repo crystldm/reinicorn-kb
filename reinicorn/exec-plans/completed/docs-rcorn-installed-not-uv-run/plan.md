@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: docs/rcorn-installed-not-uv-run'
 slug: docs-rcorn-installed-not-uv-run
-lifecycle: active
-status: in-progress
+lifecycle: done
+status: complete
 created: 2026-08-15
 author: Michael Biehl
 branch: docs/rcorn-installed-not-uv-run
