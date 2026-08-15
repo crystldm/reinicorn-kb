@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: fix/hooks-stale-repair'
 slug: fix-hooks-stale-repair
-lifecycle: active
-status: in-progress
+lifecycle: done
+status: complete
 created: 2026-07-31
 author: Michael Biehl
 branch: fix/hooks-stale-repair
