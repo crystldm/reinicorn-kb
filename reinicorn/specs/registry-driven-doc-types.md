@@ -1,3 +1,7 @@
+---
+status: approved
+review_pr: https://github.com/crystldm/reinicorn-kb/pull/10
+---
 # Registry-driven doc types
 
 **Date:** 2026-07-27
