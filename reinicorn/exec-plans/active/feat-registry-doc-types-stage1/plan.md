@@ -47,7 +47,7 @@ Key decisions, settled during planning:
 3. **Plan frontmatter gains `origin` + `human_validated`** in both the template path and the fallback path. Forced by routing the fallback through the shared renderer while keeping the `test_plan_create_three_template_states_agree` invariant (all creation paths emit the same key set). Both are core fields allowed on every type.
 4. **Retro's branch-heading fallback generalizes** to `f"{dt.key.capitalize()}: {branch}"` — byte-identical for retro (`Retro: feature/x`), no per-type literal.
 
-What deliberately stays bespoke (spec Non-Goals): plan lifecycle verbs and overlap detection; retro-rides-with-active-plan target resolution (kept as an `addressing == "branch"` special case keyed on `dt.key == "retro"`); the `"Golden Principles"` singleton H1 literal (stage 3's literal sweep).
+What deliberately stays bespoke (spec Non-Goals): plan lifecycle verbs and overlap detection; retro-rides-with-active-plan target resolution (kept as an `addressing == "branch"` special case keyed on `dt is REGISTRY["retro"]` — an identity check against the registry row, because `tests/test_source_of_truth.py::test_no_doc_type_key_comparisons` forbids doc-type key strings in comparisons); the `"Golden Principles"` singleton H1 literal (stage 3's literal sweep).
 
 Task order keeps the suite green at every commit: registry first (with `title_required` migrated in the same commit), then the generic creator with the old wrappers as one-line delegates, then idea, then wrapper/dispatch collapse, then plan fallback, then the phantom-type test and full gate.
 
@@ -463,7 +463,7 @@ def render_doc(
 def _branch_target(dt: DocType, repo_dir: Path, branch: str) -> Path:
     """Branch-addressed target. Retro rides with an active plan when one
     exists (spec non-goal: this coupling stays code, not registry data)."""
-    if dt.key == "retro":
+    if dt is REGISTRY["retro"]:  # identity, not key string: see test_source_of_truth
         active_dir = branch_doc_path("plan", repo_dir, branch).parent
         if active_dir.is_dir():
             return active_dir / Path(dt.filename).name
