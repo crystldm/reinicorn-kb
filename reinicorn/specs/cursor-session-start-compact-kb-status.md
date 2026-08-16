@@ -1,12 +1,22 @@
+---
+type: spec
+title: Cursor session-start compact kb status
+slug: cursor-session-start-compact-kb-status
+lifecycle: active
+status: in-review
+created: 2026-07-28
+updated: 2026-08-16
+author: Rodion Izotov
+origin: ai-assisted
+human_validated: false
+review_pr: https://github.com/crystldm/reinicorn-kb/pull/11
+---
+
 # Cursor session-start compact kb status
 
-**Date:** 2026-07-28
-**Author:** Rodion Izotov
-**Status:** in-review
-**Origin:** ai-assisted
-**Human-validated:** false
-**Promotes:** kb/reinicorn/ideas/michael-biehl/2026-07-02-wire-kb-status-compact-into-non-claude-session-hooks-cursor.md
-**Review-PR:** https://github.com/crystldm/reinicorn-kb/pull/11
+Promotes idea
+`reinicorn/ideas/michael-biehl/2026-07-02-wire-kb-status-compact-into-non-claude-session-hooks-cursor.md`
+(stamp its `promoted_to:` on merge).
 
 ## Problem
 
@@ -35,9 +45,9 @@ hook wiring was left out.
 - Session start stays **local-reads-only and near-instant**: no kb fetch, no lint
   suite, no stale-doc scan, and no `uv run` env sync (same budget as
   `_compact_status()` and AXI decisions).
-- Script fails open: missing preprovisioned `.venv/bin/rcorn`, `timeout`, or `jq`;
-  non-Reinicorn repo; CLI error or timeout → exit 0, no context injected,
-  session proceeds normally.
+- Script fails open: no `rcorn` binary (neither on `PATH` nor at
+  `.venv/bin/rcorn`), missing `timeout` or `jq`; non-Reinicorn repo; CLI error
+  or timeout → exit 0, no context injected, session proceeds normally.
 - Structural tests lock the source repo's `.cursor/hooks.json`, tracked hook
   copies, and the install path so regressions are caught in CI.
 - Upgrading Reinicorn re-applies editor hook config automatically — including
@@ -74,7 +84,10 @@ injecting compact status into Cursor session context:
 # Inject rcorn kb status --compact into Cursor sessionStart context.
 set -euo pipefail
 
-RCORN=".venv/bin/rcorn"
+# Installed binary first (uv tool install — the documented install path);
+# .venv fallback covers pre-install dev checkouts of the reinicorn repo itself.
+RCORN="$(command -v rcorn || true)"
+[ -x "$RCORN" ] || RCORN=".venv/bin/rcorn"
 [ -x "$RCORN" ] || exit 0
 command -v timeout >/dev/null 2>&1 || exit 0
 
@@ -90,9 +103,13 @@ else
 fi
 ```
 
-**Why `.venv/bin/rcorn` not `uv run`:** `uv run` syncs the project environment
-by default and can block on network or file locks. Session-start invokes the
-preprovisioned offline venv only, wrapped in a hard timeout.
+**Why the installed `rcorn`, not `uv run`:** `uv run` syncs the project
+environment by default and can block on network or file locks. Session-start
+invokes an already-provisioned binary only, wrapped in a hard timeout. `PATH`
+comes first because consumers install rcorn globally with `uv tool install`
+(GETTING-STARTED.md) — git hooks and daily usage call the global binary — so a
+`.venv`-only lookup would silently never fire in consumer repos.
+`.venv/bin/rcorn` remains as the fallback for pre-install dev checkouts.
 
 **Why a separate script from Claude's `session-start.sh`:** Claude's hook also
 kb-pulls, handles remote credential rewrite, runs `uv sync`, and calls
@@ -181,21 +198,24 @@ Extend `tests/test_source_editor_integrations.py`:
   `.reinicorn/hooks/session-start-status.sh`.
 - Assert `test_source_hooks_match_package_owned_editor_hooks` covers the new
   script (byte match between `editor-hooks/` and `.reinicorn/hooks/`).
-- Assert the script invokes `.venv/bin/rcorn` via `timeout 2s` (not `uv run`).
+- Assert the script wraps the rcorn call in `timeout 2s` and never invokes
+  `uv run`.
 
 ### Shell unit test
 
-Add `tests/hooks/test_session_start_status.sh` (or pytest wrapper invoking bash)
-that exercises the script without a live Reinicorn repo:
+Add `tests/test_session_start_status_hook.py` — a pytest module that runs the
+script via `subprocess` with a JSON payload, following the existing
+`tests/test_guardrail_hook.py` pattern for editor-hook scripts — exercising the
+script without a live Reinicorn repo (control `PATH` per test to steer which
+`rcorn` resolves):
 
-- **Happy path:** create a stub `.venv/bin/rcorn` that prints known compact
-  output; assert stdout is valid JSON with `additional_context` containing that
-  output.
-- **No venv:** assert exit 0, empty stdout.
+- **Happy path:** stub `rcorn` on `PATH` (or at `.venv/bin/rcorn`) that prints
+  known compact output; assert stdout is valid JSON with `additional_context`
+  containing that output.
+- **No rcorn:** neither on `PATH` nor at `.venv/bin/rcorn`; assert exit 0,
+  empty stdout.
 - **Empty context:** stub rcorn that prints nothing; assert exit 0, empty stdout.
 - **No jq:** assert exit 0, empty stdout (fail-open).
-
-Run via `tests/run-all.sh` / pytest as appropriate for shell tests in this repo.
 
 ### `hooks_install` integration test
 
@@ -220,7 +240,12 @@ including the `Already up to date` early-return path, invoke
   editor config picks up new hook registrations (including `sessionStart`)
   without a manual step.
 
-Add tests in `tests/commands/test_update.py` (or extend existing update tests):
+`cmd_update()` already calls `cmd_hooks_install()` on one path — the kb
+submodule→clone migration (added with the submodule removal). This change
+generalizes that: run it on every successful exit, which subsumes the
+migration-path special case.
+
+Add tests in `tests/test_update.py` (the existing update test module):
 
 - After update changes hook assets, `.cursor/hooks.json` gains `sessionStart`.
 - On `Already up to date`, `cmd_hooks_install()` still runs and merges missing
@@ -243,7 +268,8 @@ Append to `platform-instructions/cursor.md` (installed by `rcorn init` as
 On each new Agent/Composer session, a `sessionStart` hook injects
 `rcorn kb status --compact` into context (branch, plan state, overlap, next
 step). Installed by `rcorn init` and refreshed by `rcorn update`. Requires
-Cursor 2.4+, a provisioned `.venv` (`uv sync`), `timeout` (coreutils), and `jq`.
+Cursor 2.4+, an installed `rcorn` (`uv tool install`; a provisioned `.venv`
+also works), `timeout` (coreutils), and `jq`.
 ```
 
 Do not change Claude or Copilot platform instructions in this spec.
@@ -264,8 +290,8 @@ get platform instructions; `rcorn hooks install` (run during init and after
       `sessionStart` into `.cursor/hooks.json` idempotently.
 - [ ] `test_hooks_install.py`: fresh repo gets `sessionStart` entry after
       `rcorn hooks install`; re-run is idempotent.
-- [ ] Shell test (`tests/hooks/test_session_start_status.sh`): valid JSON on
-      happy path; silent exit 0 without `.venv/bin/rcorn`, empty context,
+- [ ] Hook test (`tests/test_session_start_status_hook.py`): valid JSON on
+      happy path; silent exit 0 without any resolvable `rcorn`, empty context,
       timeout, or missing `jq`.
 - [ ] Reinicorn source repo `.cursor/hooks.json` includes the `sessionStart`
       entry; `test_source_editor_integrations.py` passes.
@@ -286,8 +312,8 @@ get platform instructions; `rcorn hooks install` (run during init and after
 | Known Cursor race where `additional_context` may not surface in some builds | Fail open; agents can still run `rcorn kb status --compact` manually; track upstream fix |
 | Cursor cloud/background agents may defer or skip `sessionStart` | Fail open; document that local Agent sessions are the primary target |
 | `jq` not installed | Fail open (no injection); PreToolUse hooks still require jq for enforcement — document both behaviors |
-| Hook runs on every new Composer session — latency | Direct `.venv/bin/rcorn` with `timeout 2s`; no `uv run` sync, network, or O(docs) git operations |
-| `.venv` not provisioned | Fail open; run `uv sync` once during project setup |
+| Hook runs on every new Composer session — latency | Direct rcorn binary with `timeout 2s`; no `uv run` sync, network, or O(docs) git operations |
+| `rcorn` not resolvable (not installed, no `.venv`) | Fail open; install per GETTING-STARTED.md (`uv tool install`) |
 | Multiple `sessionStart` hooks — merge clobbers user entries | Dedupe by `command` path only; append, never replace the whole bucket |
 
 ## Non-Goals
