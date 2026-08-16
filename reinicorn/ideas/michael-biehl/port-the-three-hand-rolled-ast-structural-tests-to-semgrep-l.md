@@ -62,6 +62,15 @@ small codebase. Weigh that against three bespoke AST walkers that each need
 maintaining. A flake8 plugin keeps the toolchain Python-only but is more work
 to write. Decide before a fourth walker appears.
 
+### Added 2026-08-16: golden principle 15 joins the rule backlog
+
+"No stringly-typed code" (golden principle 15) can only be enforced
+generally by this work — pyright's `reportUnnecessaryComparison` covers
+enum-vs-string-literal comparisons and nothing else; the full smell
+(modes/kinds/states passed as bare strings, data encoded in delimited
+strings) needs semantic rules. When the opengrep port lands, add rules for
+principle 15 alongside the three ported walkers.
+
 ### Decided 2026-08-14: opengrep, not semgrep
 
 The port happens via the golden-principle-enforcement spec (in review, kb#13),
