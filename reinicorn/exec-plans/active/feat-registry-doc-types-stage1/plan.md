@@ -27,6 +27,8 @@ Ship spec stage 1 ("Fields + generic creator") as one PR: registry rows become t
 
 Stages 2–5 of the spec (CLI generation, gate generalization, seeding/linting, shipped docs/tests) are **out of scope** — each gets its own branch + plan after this merges.
 
+**Branch flow (decided 2026-08-16):** the whole feature integrates on the long-lived branch `feat-registry-doc-types`; each stage branch PRs into it, and only the completed feature merges to `main`. No intermediary stage lands on `main`.
+
 ## Acceptance Criteria
 
 - [ ] `DocType` carries `template_body`, `addressing`, `title_source`, `create_verb`, `create_mode`, `help_text`, `readme_label` (spec's seven) plus `create_status` and `extra_meta` (approved planning addition — see Approach).
@@ -36,7 +38,7 @@ Stages 2–5 of the spec (CLI generation, gate generalization, seeding/linting, 
 - [ ] `plan.py`'s template-less fallback writes `plan.md` through the shared renderer; `test_plan_create_three_template_states_agree` still passes.
 - [ ] Behavior preserved: creation paths, template bodies, gating semantics, no-clobber and drafts-annex rules, retro rides-with-plan, idea `-2` dedupe. The only diffs are the four normalizations listed in Approach.
 - [ ] Full gate green: `uv run pytest tests/ -v`, `uv run ruff check src/reinicorn tests`, `uv run pyright src/reinicorn`, `bash tests/run-all.sh`.
-- [ ] PR to `main` citing the spec, with verification evidence and the normalizations disclosed (never push to main directly).
+- [ ] PR to the `feat-registry-doc-types` integration branch citing the spec, with verification evidence and the normalizations disclosed (never push to main; main only receives the completed feature).
 
 ## Approach
 
@@ -57,7 +59,7 @@ Task order keeps the suite green at every commit: registry first (with `title_re
 - Never `uv run rcorn`; the installed binary is the CLI surface. No CLI invocation is needed by this plan's tests.
 - Red-green TDD; conventional commits; stdout is the agent-facing result surface.
 - Error messages state what/where/how-to-fix (golden principle 4).
-- Never push to `main` — finish via PR.
+- Never push to `main` — stage PRs target the `feat-registry-doc-types` integration branch; only the finished feature PRs to `main`.
 
 ## Tasks
 
@@ -843,10 +845,10 @@ git add tests/commands/test_doc_create.py
 git commit -m "test(doc-create): phantom-type creation coverage for the registry contract"
 ```
 
-- [ ] **Step 5: Open the PR** (never push to main). Body must cite `kb/reinicorn/specs/registry-driven-doc-types.md` (stage 1 of 5), state the verification evidence (test count, full gate), declare scope boundaries (stages 2–5 follow-up branches), and disclose the four normalizations from Approach as intentional behavior diffs.
+- [ ] **Step 5: Open the PR** against `feat-registry-doc-types` (never push to main). Body must cite `kb/reinicorn/specs/registry-driven-doc-types.md` (stage 1 of 5), state the verification evidence (test count, full gate), declare scope boundaries (stages 2–5 follow-up branches), and disclose the four normalizations from Approach as intentional behavior diffs.
 
 ## Dependencies
 
-- Spec: `reinicorn/specs/registry-driven-doc-types.md` (approved, PR #10). This branch is stage 1 of its 5-stage sequence; stages 2–5 each branch off `main` after this merges and get their own plan.
+- Spec: `reinicorn/specs/registry-driven-doc-types.md` (approved, PR #10). This branch is stage 1 of its 5-stage sequence; stages 2–5 each branch off `feat-registry-doc-types` after their predecessor merges into it, and get their own plan. The integration branch merges to `main` only when stage 5 lands.
 - Interacts with nothing on other active branches (`rcorn plan create` overlap check: none).
 - After merge: reinstall the CLI (`uv tool install --force .`) per AGENTS.md.
