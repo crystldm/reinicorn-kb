@@ -39,48 +39,80 @@ analysis becomes a later query, not a later system.
 
 ## Design Goals
 
-1. **Strict opt-in.** Nothing is ever sent without an explicit yes. Users of a
-   guardrail tool are privacy-sensitive by selection; copy the aider consent
-   pattern, not the Homebrew/Next.js opt-out pattern.
-2. **Content never leaves the machine.** Hard "never collected" list: doc
-   content, prompts, code, file paths, repo names, branch names, keys, PII.
-3. **Inspectable.** The full event schema is published in docs with literal
-   example JSON (Next.js pattern), and a debug mode prints events instead of
-   sending them (GitHub CLI `GH_TELEMETRY=log` pattern).
-4. **Cross-model-ready.** Every event carries harness + model dimensions so
-   the per-model tuning story is a free upgrade once volume exists.
-5. **Actionable at small N.** v1 questions must be answerable with tens of
-   opted-in installs: command funnels, error rates, guardrail overrides.
-6. **Findings published.** Aggregated learnings and the changes they drive are
-   published openly — the part with zero OSS precedent.
+Priority order is explicit: **1 and 2 outrank everything else.** Any conflict
+resolves in favor of anonymity and security, at the cost of data richness.
+
+1. **True anonymity, enforced client-side.** The collection server never
+   receives anything linkable to a person or install long-term, and never
+   receives anything that would need scrubbing before publication. Publishing-
+   side controls are defense-in-depth, never the primary protection.
+2. **Security.** Minimal attack surface: one first-party endpoint, no third-
+   party analytics vendor, open-source auditable collector code, all-enum
+   schema so injection is structurally impossible.
+3. **Strict opt-in.** Nothing is ever sent without an explicit yes. Copy the
+   aider consent pattern, not the Homebrew/Next.js opt-out pattern.
+4. **Public dataset.** All collected data is published openly (daily batch) —
+   radical transparency doubles as the trust story and the crowdsourced-
+   tuning story.
+5. **Inspectable.** Published schema with literal example JSON (Next.js
+   pattern); a debug mode prints events instead of sending (GitHub CLI
+   `GH_TELEMETRY=log` pattern).
+6. **Cross-model-ready.** Events carry harness + model dimensions so per-model
+   tuning is a later query, not a later system.
+7. **Actionable at small N.** v1 questions must be answerable with tens of
+   opted-in installs.
 
 ## Design
 
 ### Consent
 
-- Default: fully off. No event, no network call, no ID file.
+- Default: fully off. No event, no network call, no salt file.
 - `rcorn telemetry enable|disable|status` manages state; `enable` prints the
   schema summary and the docs URL before confirming.
 - One-time interactive prompt is allowed only at `rcorn init` (never
   mid-command), and declining is permanent — never re-prompt.
 - `DO_NOT_TRACK=1` is an unconditional override, even if previously enabled.
 - CI environments: off regardless of config (Nx pattern) — detect via `CI`.
-- Identity: random UUID4 persisted at `~/.rcorn/telemetry-id`. Deleting the
-  file permanently resets identity; no server-side way to reconnect.
+
+### Identity: rotating, client-side, unlinkable
+
+No persistent UUID — a lifetime pseudonym is not anonymity. Instead:
+
+- On enable, generate a random 256-bit **salt** stored at
+  `~/.rcorn/telemetry-salt`. The salt never leaves the machine.
+- Every event's `client_id = HMAC-SHA256(salt, current_UTC_month)` truncated
+  to 8 bytes. IDs rotate monthly by construction; the server and the public
+  dataset cannot link one install across months, and nothing server-side can
+  undo this — the linking key never left the client.
+- Within a month, `client_id` supports dedup, funnels, and per-install weight
+  caps. Across months, installs are unlinkable.
+- Deleting the salt file (or disable→enable) is an immediate identity reset.
+
+### Data minimization at the client (the primary control)
+
+- **All-enum schema.** Every field is a closed enum or a version string from
+  a known set. No free text exists anywhere in the pipeline, so neither PII
+  leakage nor content injection is expressible in a valid event.
+- **Timestamps coarsened client-side** to the UTC hour before send. Precise
+  timing (a working-hours fingerprint correlatable with public GitHub
+  activity) never exists server-side.
+- **Rare-value suppression at the client**: `model` is mapped to a maintained
+  enum of known model families; anything else is sent as `other`. Same for
+  `harness` and `os`. A custom model name can never become a fingerprint
+  because it is never transmitted.
+- Hard never-collected list: doc content, prompts, code, file/dir paths, repo
+  names, branch names, hostnames, usernames, env values, keys, IP-derived
+  geo, precise timestamps.
 
 ### Event schema (schema-first, versioned)
 
 Events are declared in one registry module (mirroring `doc_types.REGISTRY`
-style) and validated client-side before send; anything not on the field
-allowlist is dropped at the client. Schema carries a `schema_version`.
+style) and validated client-side before send; the collector re-validates and
+drops anything malformed or carrying unknown fields. Schema carries a
+`schema_version`.
 
-Common dimensions on every event:
-
-- `schema_version`, `rcorn_version`, `os` (linux/darwin/windows only)
-- `harness` (claude-code / codex / copilot / cursor / other / unknown —
-  detected from env, never free-text)
-- `model` (model id as reported by the harness env if available, else unknown)
-- `anonymous_id` (the UUID4)
+Common dimensions on every event: `schema_version`, `rcorn_version`, `os`,
+`harness`, `model`, `client_id`, `hour_bucket`.
 
 v1 event types (deliberately coarse):
 
@@ -92,48 +124,85 @@ v1 event types (deliberately coarse):
 3. `doc_lifecycle` — doc type + verb (create/show/complete/archive). Enables
    funnels like plan create → complete without touching content.
 4. `guardrail_event` — guardrail kind (skill / hook / principle / lint) +
-   guardrail id + outcome (fired / followed / overridden / errored) +
-   workflow phase (session-start / pre-commit / mid-task / finish). Phase
-   matters: field data (arXiv 2601.10253) shows workflow-boundary
-   interventions get ~52% engagement vs 62% dismissal mid-task.
+   guardrail id (from the shipped registry, an enum) + outcome (fired /
+   followed / overridden / errored) + workflow phase (session-start /
+   pre-commit / mid-task / finish). Phase matters: field data (arXiv
+   2601.10253) shows workflow-boundary interventions get ~52% engagement vs
+   62% dismissal mid-task.
 5. `error` — component + error class (no messages, no paths).
 
-### Transport
+### Collection and hosting
 
-- PostHog (the de facto OSS-agent-CLI choice), no person profiles, events
-  only; fire-and-forget with a short timeout — telemetry failure must never
-  slow or break a command.
-- `RCORN_TELEMETRY_DEBUG=1` prints the exact JSON to stderr instead of
-  sending.
-- Endpoint and project key overridable so privacy-conscious users can point
-  at their own PostHog instance (aider pattern).
+- **Ingest**: a single first-party Cloudflare Worker (free tier) is the only
+  endpoint. It schema-validates, enforces enums, rate-limits per `client_id`,
+  and appends to R2/D1. ~100 lines; its source lives in the public telemetry
+  repo so the exact server behavior is auditable.
+- **No third-party analytics vendor** (no PostHog). Fewer parties holding
+  data is the point; the public dataset is the primary and only store.
+- **No IP retention**: the worker never logs or stores IPs or headers;
+  Cloudflare-edge logging is disabled/minimized and the residual "Cloudflare
+  sees connection metadata in transit" is documented honestly in the threat
+  model rather than papered over.
+- Fire-and-forget with a short timeout — telemetry failure must never slow or
+  break a command. `RCORN_TELEMETRY_DEBUG=1` prints the exact JSON to stderr
+  instead of sending. Endpoint overridable for users who want to run their
+  own collector.
 
-### Analysis discipline
+### Public dataset (daily batch — decided 2026-08-16)
 
-- Cap per-installation weight in any aggregate (one anonymous client must not
-  move a conclusion — the Chatbot Arena vote-rigging lesson, arXiv
-  2501.17858).
-- Before generalizing, diff the opted-in sample's harness/model mix against
-  known ecosystem distributions (the arXiv 2604.05100 audit pattern) —
-  opted-in users are not representative.
-- Treat per-model findings as hypotheses to confirm with a fixed benchmark
-  harness (aider leaderboard pattern), not conclusions.
-- Publish a periodic "what the telemetry taught us" doc plus the retention
-  window (12 months, then purge).
+- A public repo (`crystldm/reinicorn-telemetry`) holds daily NDJSON files
+  committed by a scheduled GitHub Action pulling from the worker, plus
+  regenerated aggregate JSON. Versioned, diffable, anyone can clone and
+  analyze.
+- **Daily batch, not a live raw feed**: the ~24h delay is the remediation
+  window, and batch publication kills timing-correlation attacks that a live
+  feed would enable. Live data on the dashboard is aggregate counters only.
+- **k-anonymity gate at publish** (defense-in-depth): a dimension combination
+  (harness × model × os × rcorn_version) appearing for fewer than K=5
+  distinct client_ids in a batch is generalized to `other` in the raw export.
+- Dashboard: static GitHub Pages reading the aggregate files. No backend, no
+  accounts, no cookies.
+- Retention: the public dataset is the retention (git history). Because
+  publication is irreversible, client-side minimization (above) is sized so
+  that nothing in a valid event is sensitive even in perpetuity.
+
+### Threat model (maintained in docs, summarized here)
+
+- **Deanonymization**: mitigated by monthly client-side ID rotation, hour
+  coarsening, client-side rare-value suppression, publish-time k-anonymity.
+  Residual risk stated honestly: within a single month, an active install's
+  event pattern is a weak behavioral signature.
+- **Malicious injection / poisoning**: all-enum schema (junk can only inflate
+  counts), per-`client_id` rate limits, per-install weight caps in every
+  aggregate (Chatbot Arena vote-rigging lesson, arXiv 2501.17858), anomaly
+  review before each batch publish.
+- **Collector compromise**: worst case is loss/corruption of coarse enum
+  counts — by construction there is nothing sensitive to steal. Worker code
+  is public and reviewed via PR like any other change.
+- **Sample bias**: before generalizing, diff the opted-in sample's
+  harness/model mix against known ecosystem distributions (arXiv 2604.05100
+  audit pattern); treat per-model findings as hypotheses to confirm on a
+  fixed benchmark harness (aider leaderboard pattern).
 
 ### Docs
 
 New docs page: what is collected (with literal example events), the never-
-collected list, how to enable/disable/inspect, retention, and the privacy
-contact. Linked from README and from the `telemetry enable` output.
+collected list, the threat model, how to enable/disable/inspect, the publish
+pipeline, and the privacy contact. Linked from README and from the
+`telemetry enable` output.
 
 ## Non-Goals
 
 - **Per-model A/B power in v1.** The install base can't support it; v1 buys
   directional signal only. No live prompt experiments.
 - **No content collection ever** — not even opt-in flags for it (unlike
-  Claude Code's layered `OTEL_LOG_*` redaction opts). Reinicorn events are
-  metadata-only by construction.
+  Claude Code's layered `OTEL_LOG_*` redaction opts). Events are metadata-
+  only by construction.
+- **No third-party analytics** (PostHog, GA, etc.) in any tier.
+- **No live raw event feed.** Aggregates may be live; raw NDJSON is daily.
+- **No formal differential privacy** in v1 — anonymity comes from data
+  minimization and unlinkability, stated plainly rather than implied by a
+  mechanism we don't have; revisit if the dataset grows enough to need it.
 - **No arena / pairwise preference UI.** Different mechanism, different spec.
 - **No OpenTelemetry conformance.** The OTel `gen_ai.*` conventions are still
   "Development" maturity and aimed at user-side observability; revisit if
