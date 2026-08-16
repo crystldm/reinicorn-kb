@@ -212,3 +212,7 @@ sub.add_parser("attach", help="(deprecated: use 'init')")
      its actual test (`test_source_editor_integrations.py`) never ran.
    - Enforcement: CI required checks today; a Reinicorn-managed pre-push gate
      is planned (see idea: managed principle enforcement).
+
+15. **No string literals in control flow**
+   - _Rule description_
+   - Prevents: _What this rule prevents_
