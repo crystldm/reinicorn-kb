@@ -213,13 +213,17 @@ sub.add_parser("attach", help="(deprecated: use 'init')")
    - Enforcement: CI required checks today; a Reinicorn-managed pre-push gate
      is planned (see idea: managed principle enforcement).
 
-15. **No string literals in control flow**
-   - Never branch on a comparison against a bare string literal
-     (`if mode == "append"`, `if dt.key == "retro"`). Values that carry
-     behavior get a real type — an `Enum` member compared with `is`, a
-     registry identity check (`dt is REGISTRY["retro"]`), or a named
-     constant. Plain `Enum` over `StrEnum`: a stray `== "branch"` must be
-     always-False and flagged by pyright, not silently keep working.
+15. **No stringly-typed code**
+   - Values that carry meaning get a real type, not a bare string: an
+     `Enum` member compared with `is`, a registry identity check
+     (`dt is REGISTRY["retro"]`), a dataclass, or a named constant. The
+     smell in all its forms — branching on string comparisons
+     (`if mode == "append"`), passing modes/kinds/states around as
+     strings, encoding structured data in delimited strings. Strings are
+     for text a human reads or an external boundary demands; parse them
+     into types at that boundary. Plain `Enum` over `StrEnum`: a stray
+     `== "branch"` must be always-False and flagged by pyright, not
+     silently keep working.
    - Prevents: typo'd branches that never match, silent breakage when a
      value is renamed (grep finds an enum member; it misses one of a dozen
      scattered literals), and type knowledge leaking out of its single
