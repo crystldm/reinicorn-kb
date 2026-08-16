@@ -214,5 +214,17 @@ sub.add_parser("attach", help="(deprecated: use 'init')")
      is planned (see idea: managed principle enforcement).
 
 15. **No string literals in control flow**
-   - _Rule description_
-   - Prevents: _What this rule prevents_
+   - Never branch on a comparison against a bare string literal
+     (`if mode == "append"`, `if dt.key == "retro"`). Values that carry
+     behavior get a real type — an `Enum` member compared with `is`, a
+     registry identity check (`dt is REGISTRY["retro"]`), or a named
+     constant. Plain `Enum` over `StrEnum`: a stray `== "branch"` must be
+     always-False and flagged by pyright, not silently keep working.
+   - Prevents: typo'd branches that never match, silent breakage when a
+     value is renamed (grep finds an enum member; it misses one of a dozen
+     scattered literals), and type knowledge leaking out of its single
+     source of truth — e.g. doc-type dispatch drifting from
+     `doc_types.REGISTRY`.
+   - Enforcement: code review plus the structural test banning doc-type key
+     comparisons (`test_no_doc_type_key_comparisons`); a general lint rule
+     waits for the semgrep/opengrep work.
