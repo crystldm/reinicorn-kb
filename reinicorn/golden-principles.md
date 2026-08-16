@@ -229,6 +229,11 @@ sub.add_parser("attach", help="(deprecated: use 'init')")
      scattered literals), and type knowledge leaking out of its single
      source of truth — e.g. doc-type dispatch drifting from
      `doc_types.REGISTRY`.
-   - Enforcement: code review plus the structural test banning doc-type key
-     comparisons (`test_no_doc_type_key_comparisons`); a general lint rule
-     waits for the semgrep/opengrep work.
+   - Enforcement: `uv run pyright src/reinicorn` with
+     `reportUnnecessaryComparison = "error"` (pyproject) — an Enum field
+     compared to a string literal fails the gate. Doc-type keys:
+     `test_no_doc_type_key_comparisons`. Tests (not pyright-checked):
+     `grep -rnE '(addressing|title_source|create_mode)\s*[=!]=\s*"' tests`
+     must match nothing. The remaining forms (modes passed around as bare
+     strings, data encoded in delimited strings) wait for the
+     semgrep/opengrep work.
