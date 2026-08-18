@@ -40,15 +40,15 @@ Plan 1 of the skill-base-agnostic spec: the adapter infrastructure and the super
 
 ## Acceptance Criteria
 
-- [ ] `rcorn skills install superpowers` on a fixture project produces patched skills in the configured skills dir, `.reinicorn/skillset-lock.json`, the generated wiring doc, and the compatibility link — atomically (any induced failure leaves the project byte-identical).
-- [ ] Same adapter + same pin ⇒ byte-identical output (double-install idempotence test).
-- [ ] A patch that does not apply fails loudly naming the patch file, target, and remediation; nothing is written.
-- [ ] Wiring doc renders one row per `REGISTRY` type (phantom-type test passes); unknown non-optional wiring keys error listing actual registry types; optional-absent keys are skipped and reported.
-- [ ] Skills dir and compatibility link are configurable via `REINICORN_SKILLS_DIR` / `REINICORN_SKILLS_LINK` (`none` disables the link).
-- [ ] The repo contains zero third-party skill text: the 14 superpowers forks, `update-superpowers`, and the forks' `ATTRIBUTION.md` are deleted; `.agents/skills/` ships only `using-reinicorn` and `populate-agents-md`; adapter-installed skills are gitignored and the repo dogfoods `rcorn skills install superpowers`.
-- [ ] `using-reinicorn` is methodology-neutral: no superpowers skill names, no hardcoded doc nouns; points at the generated wiring doc; states the no-skills-listed fallback rule.
-- [ ] `rcorn update` on a legacy project detects the old forks via the manifest and offers the superpowers-adapter migration; locally modified forks are never silently deleted.
-- [ ] Full gate green; PR body cites the spec and discloses behavior changes.
+- [x] `rcorn skills install superpowers` on a fixture project produces patched skills in the configured skills dir, `.reinicorn/skillset-lock.json`, the generated wiring doc, and the compatibility link — atomically (any induced failure leaves the project byte-identical).
+- [x] Same adapter + same pin ⇒ byte-identical output (double-install idempotence test).
+- [x] A patch that does not apply fails loudly naming the patch file, target, and remediation; nothing is written.
+- [x] Wiring doc renders one row per `REGISTRY` type (phantom-type test passes); unknown non-optional wiring keys error listing actual registry types; optional-absent keys are skipped and reported.
+- [x] Skills dir and compatibility link are configurable via `REINICORN_SKILLS_DIR` / `REINICORN_SKILLS_LINK` (`none` disables the link).
+- [x] The repo contains zero third-party skill text: the 14 superpowers forks, `update-superpowers`, and the forks' `ATTRIBUTION.md` are deleted; `.agents/skills/` ships only `using-reinicorn` and `populate-agents-md`; adapter-installed skills are gitignored and the repo dogfoods `rcorn skills install superpowers`.
+- [x] `using-reinicorn` is methodology-neutral: no superpowers skill names, no hardcoded doc nouns; points at the generated wiring doc; states the no-skills-listed fallback rule.
+- [x] `rcorn update` on a legacy project detects the old forks via the manifest and offers the superpowers-adapter migration; locally modified forks are never silently deleted.
+- [x] Full gate green; PR body cites the spec and discloses behavior changes.
 
 ## File Structure
 
