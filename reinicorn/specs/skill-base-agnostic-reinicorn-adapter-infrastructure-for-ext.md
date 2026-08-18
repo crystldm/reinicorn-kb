@@ -3,7 +3,7 @@ type: spec
 title: 'Skill-base agnostic reinicorn: adapter infrastructure for external skill sets'
 slug: skill-base-agnostic-reinicorn-adapter-infrastructure-for-ext
 lifecycle: active
-status: in-review
+status: approved
 created: 2026-08-16
 author: Michael Biehl
 origin: ai-assisted
