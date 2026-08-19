@@ -236,3 +236,7 @@ sub.add_parser("attach", help="(deprecated: use 'init')")
      `reportUnnecessaryComparison = "error"` catches enum-vs-string-literal
      comparisons only, and `test_no_doc_type_key_comparisons` covers
      doc-type keys only. Code review carries the rest for now.
+
+16. **No change-detector tests**
+   - _Rule description_
+   - Prevents: _What this rule prevents_
