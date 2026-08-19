@@ -238,5 +238,20 @@ sub.add_parser("attach", help="(deprecated: use 'init')")
      doc-type keys only. Code review carries the rest for now.
 
 16. **No change-detector tests**
-   - _Rule description_
-   - Prevents: _What this rule prevents_
+   - A regression test asserts a desired behavior, never the absence of a
+     rejected or corrected approach. Banned-word scans over prose or code
+     ("must not contain `superpowers`"), assertions that pin incidental
+     structure, and tests whose only failure mode is "someone reverted to
+     the idea we rejected" are change detectors: they encode the rejection,
+     not the requirement. State the requirement positively (e.g. "the skill
+     points at the generated wiring doc") and let review carry the history.
+     If the rejection itself matters, record WHY in the doc layer (spec,
+     retro, principle) — not as a tripwire in the test suite.
+   - Prevents: fossilized rejections — an LLM failure mode where a
+     corrected idea gets outsized weight and the codebase accumulates
+     tests that forbid mentioning it, which then block legitimate uses
+     (e.g. citing the rejected thing as an example) and document nothing
+     about what the code should actually do.
+   - Enforcement: code review; reviewers should ask of every new
+     assertion "what desired behavior fails if this trips?" — no
+     mechanical guard exists.
