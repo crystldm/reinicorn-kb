@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: feat-skillset-adapters'
 slug: feat-skillset-adapters
-lifecycle: active
-status: planning
+lifecycle: done
+status: complete
 created: 2026-08-18
 author: Michael Biehl
 branch: feat-skillset-adapters
