@@ -59,15 +59,15 @@ the `ready-for-agent` label) happens post-merge as a local action — adapter
 installs are gitignored; nothing to commit.
 
 ## Tasks
-- [ ] Task 1: Adapter definition — `adapters/mattpocock-skills/`
+- [x] Task 1: Adapter definition — `adapters/mattpocock-skills/`
   (adapter.yaml, generated patches for to-spec/to-tickets/code-review,
   appends for to-spec/to-tickets/wayfinder, ATTRIBUTION.md), plus a
   bundled-listing check (`rcorn skills list` shows it).
-- [ ] Task 2: Schema tests `tests/skillset/test_mattpocock_adapter.py`
+- [x] Task 2: Schema tests `tests/skillset/test_mattpocock_adapter.py`
   (loads, pin shape, 12-skill category mapping, patch-target consistency,
   patches alphabetical, appends/files/wiring reference installed skills)
   + manual live dry-run install verification recorded in the task report.
-- [ ] Task 3: Repo docs — `docs/agents/issue-tracker.md` + README
+- [x] Task 3: Repo docs — `docs/agents/issue-tracker.md` + README
   bundled-adapters section update.
 
 ## Dependencies
