@@ -3,7 +3,7 @@ type: plan
 title: 'Execution Plan: feat-kb-review-status-checks'
 slug: feat-kb-review-status-checks
 lifecycle: active
-status: planning
+status: in-progress
 created: 2026-08-22
 author: Michael Biehl
 origin: ai-assisted
@@ -65,17 +65,17 @@ into a pure text function shared by the CLI guard and CI. GitHub's
 `strict_required_status_checks_policy` (required).
 
 ## Tasks
-- [ ] Task 1: Integrity core + `rcorn _review-check` — pure
+- [x] Task 1: Integrity core + `rcorn _review-check` — pure
   `candidate_matches(candidate, draft)` in `review.py`,
   `commands/internal/review_check.py`, `_INTERNAL_COMMANDS` wiring, tests
   in `tests/commands/internal/test_review_check.py`.
-- [ ] Task 2: Workflow asset `workflows/reinicorn-doc-review-checks.yml`
+- [x] Task 2: Workflow asset `workflows/reinicorn-doc-review-checks.yml`
   + asset tests (structure, head.ref hardening, install source, job names
   match ruleset contexts).
-- [ ] Task 3: `review setup` — asset tuple loop, `required_status_checks`
+- [x] Task 3: `review setup` — asset tuple loop, `required_status_checks`
   rule in `_RULESET`, reconciliation covers the rule; update/extend the
   setup tests; `review merge` error hint mentions required checks.
-- [ ] Task 4: Docs — kb doc-review-lane references + README/docs mention
+- [x] Task 4: Docs — kb doc-review-lane references + README/docs mention
   of the two checks and the rollout step; full gate; PR.
 - [ ] Task 5 (post-merge, manual): reinstall rcorn, `rcorn review setup
   --force` on this kb repo, `rcorn review push` the open candidates, and
