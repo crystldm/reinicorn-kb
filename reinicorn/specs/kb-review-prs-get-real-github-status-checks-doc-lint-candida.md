@@ -3,7 +3,7 @@ type: spec
 title: 'Kb review PRs get real GitHub status checks: doc lint + candidate integrity'
 slug: kb-review-prs-get-real-github-status-checks-doc-lint-candida
 lifecycle: active
-status: in-review
+status: approved
 created: 2026-08-21
 author: Michael Biehl
 origin: ai-assisted
