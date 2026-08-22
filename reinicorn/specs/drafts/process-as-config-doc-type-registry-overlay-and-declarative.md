@@ -3,11 +3,12 @@ type: spec
 title: 'Process-as-config: doc-type registry overlay and declarative type relations'
 slug: process-as-config-doc-type-registry-overlay-and-declarative
 lifecycle: active
-status: draft
+status: in-review
 created: 2026-08-22
 author: Michael Biehl
 origin: ai-assisted
 human_validated: false
+review_pr: https://github.com/crystldm/reinicorn-kb/pull/18
 ---
 
 # Process-as-config: doc-type registry overlay and declarative type relations
