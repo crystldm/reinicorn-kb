@@ -3,12 +3,13 @@ type: spec
 title: 'Enforce plan completion: pre-merge retro gate with spec-drift accounting'
 slug: enforce-plan-completion-pre-merge-retro-gate-with-spec-drift
 lifecycle: active
-status: in-review
+status: draft
 created: 2026-08-21
 author: Michael Biehl
 origin: ai-assisted
 human_validated: false
 review_pr: https://github.com/crystldm/reinicorn-kb/pull/16
+review_cancelled: 2026-08-22
 ---
 # Enforce plan completion: pre-merge retro gate with spec-drift accounting
 
