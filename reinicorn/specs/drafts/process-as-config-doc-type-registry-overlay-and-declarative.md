@@ -329,9 +329,18 @@ Repo prose, not engine:
 
 ## Non-Goals
 
-- **No rule language.** No conditions, custom events, or scripting in the
-  overlay; if a process needs a gate the engine lacks, that is an engine
-  change with its own spec. The two relations are the whole vocabulary.
+- **No rule language, no rules/policy library.** No conditions, custom
+  events, or scripting in the overlay; if a process needs a gate the
+  engine lacks, that is an engine change with its own spec. The checks are
+  ~6 fixed functions, so a rules engine or policy language (OPA, CUE) and a
+  validation library (pydantic) were considered and rejected at this size
+  — stdlib dataclass + one `validate()` suffices. Revisit trigger: the
+  first request for a *conditional* in the overlay ("required only when
+  …"); at that point a policy language beats growing our own (idea:
+  `policy-language-for-overlay-conditions`). One zero-dependency nicety is
+  in scope for stage 1 if cheap: `rcorn doc-types show --schema` emitting a
+  JSON Schema derived from the dataclass, for editor validation of
+  `doc-types.yaml`.
 - **Overlay is not review-gated.** `doc-types.yaml` ships with
   `kb publish`. The process gate guards a team norm, not an adversary: a
   collaborator with kb push can already edit a retro to say "None." or
