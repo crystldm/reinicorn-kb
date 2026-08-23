@@ -257,5 +257,19 @@ sub.add_parser("attach", help="(deprecated: use 'init')")
      mechanical guard exists.
 
 17. **No tool sprawl: uv is the sole Python toolchain**
-   - _Rule description_
-   - Prevents: _What this rule prevents_
+   - One tool installs, resolves, and runs Python here: uv. No `pip`,
+     `python -m pip`, `python -m venv`, `pipx`, or `actions/setup-python`
+     — in CI workflows (this repo's own and the templates `rcorn review
+     setup` installs into kb repos), hooks, scripts, and docs alike. In
+     Actions: `astral-sh/setup-uv`, then `uv run ...` (`uv run --project
+     <dir>` when the working directory must stay elsewhere); uv resolves
+     the interpreter from `requires-python`, so there is no separate
+     Python setup step. Locally: `uv run` for in-repo work, `uv tool
+     install --force .` for the installed `rcorn`.
+   - Prevents: two resolvers disagreeing (a pip-installed tree drifting
+     from `uv.lock`), workflows that carry a second setup step and a
+     hand-pinned Python version, and "works with pip, fails with uv" bug
+     reports — a second toolchain is a second set of failure modes.
+   - Enforcement: `tests/test_toolchain.py` sweeps every workflow YAML
+     (`.github/workflows/`, `workflows/`) for pip / setup-python / venv
+     invocations on non-comment lines and fails citing this principle.
