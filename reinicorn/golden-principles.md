@@ -255,3 +255,7 @@ sub.add_parser("attach", help="(deprecated: use 'init')")
    - Enforcement: code review; reviewers should ask of every new
      assertion "what desired behavior fails if this trips?" — no
      mechanical guard exists.
+
+17. **No tool sprawl: uv is the sole Python toolchain**
+   - _Rule description_
+   - Prevents: _What this rule prevents_
