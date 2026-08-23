@@ -81,8 +81,10 @@ Overlay semantics, by `doc_types.<key>`:
 
 - **Override** a built-in row: only the listed fields change
   (`required_sections: [...]` replaces the list wholesale — no merge magic).
-- **Add** a row: all required `DocType` fields present; enums by their
-  string value.
+- **Add** a row: `dir_path`, `filename` and `addressing` are mandatory;
+  enums by their string value. Everything else takes the dataclass default
+  plus two derived ones so a minimal row is usable: `help_text` →
+  `"<key> doc operations"`, `template_body` → `"{sections}"`.
 - **Remove** a built-in row: `disabled: true`; refused if any other row's
   relation targets it.
 
@@ -90,7 +92,20 @@ Load-time validation fails **closed** with the file path and offending key
 — a broken process config must not silently revert to defaults. Invariants:
 existing ones (`gated` ⇒ slug addressing), relation targets exist, relation
 fields are declared fields of the row, `filename` placeholders match
-`addressing`, `closes` pairs are both branch-addressed.
+`addressing`, `closes` pairs are both branch-addressed, at most one enabled
+closer per closee and a closer is not itself closable (depth one — no
+chains), and a branch-addressed row always has `branch` in
+`required_fields` (the loader adds it; its value is the git branch name,
+path-sanitized through the existing `sanitize_branch`).
+
+**Filename patterns.** Slug-addressed rows may use a `{seq}` placeholder
+with a width — `"RFC-{seq:04}-{slug}.md"` — for numbered corpora. The
+number is allocated at create time as max-existing + 1, found by matching
+the pattern's own regex over the type's dir (and `drafts/` when gated, so
+two open drafts never collide), and stamped into the doc's `id` field
+(`RFC-0007`). `show` resolves either the id or the slug. The slug stays the
+identity for review-lane refs and `depends_on`; the number is a display
+prefix, never re-allocated.
 
 The per-type frontmatter vocabulary moves into the row too — `fields` and
 `required_fields` absorb `frontmatter.PER_TYPE` / `PER_TYPE_REQUIRED` — so
@@ -116,11 +131,22 @@ doc_types:
   (via `spec_refs`, unchanged) to a tracked doc of `type` with `status`, or
   be the N/A sentinel. Generalizes the plan → approved-spec rule.
 - `closes: {type, required}` — this type is the closer of `type`. Implies:
-  the closer is created *inside* the closee's active dir (today's
-  `_branch_target` special case, now a graph lookup `closer_of(dt)`);
-  `<closee> complete` moves `active/{branch}/` → `completed/{branch}/` with
-  both docs; and, when `required`, the closee cannot complete without a
-  filled closer. The closer's `filename` is its tail only (`retro.md`).
+  the closer is created *inside* the closee's dir (today's `_branch_target`
+  special case, now a graph lookup `closer_of(dt)`); `<closee> complete`
+  moves the dir from the active to the completed stage with both docs; and,
+  when `required`, the closee cannot complete without a filled closer.
+
+  One path contract, one function. A closable type's `filename` must be
+  `{stage}/{branch}/<name>` (`plan` becomes `"{stage}/{branch}/plan.md"`;
+  `stage` ∈ the existing `active`/`completed` constants, `branch` through
+  `sanitize_branch`). A closer's `filename` is a bare name with no
+  placeholders or `/` (`"retro.md"`). `doc_path(dt, branch, stage)` is the
+  only path computation: for a closable row it formats the pattern; for a
+  closer it is `doc_path(closee, branch, stage).parent / closer.filename`.
+  Create, show, complete, archive and the lints all call it. Creating a
+  closer resolves `stage` to wherever the closee currently lives; if no
+  closee doc exists for that branch, `completed` (a retro without a plan is
+  a closed branch, as today).
 
 The `complete` verb is generated for every type that something `closes`
 (today only plan), alongside `create`/`show`. Queries on the effective
@@ -128,6 +154,23 @@ registry — `closer_of(type)`, `closable_types()`, `dependencies_of(type)`
 — replace the literal `REGISTRY["plan"]`/`["retro"]`/`["spec"]` lookups in
 all thirteen files. A relation with no match returns `None` and the caller
 skips, which is how a repo with no `closes` row gets no retro behavior.
+
+### 2b. No type names in the engine
+
+The sweep is not only `REGISTRY["plan"]` lookups. After stage 2 the only
+place a built-in type key may appear in `src/reinicorn` is the defaults
+table in `doc_types.py` — no identifiers (`_archive_stale_plans`,
+`plan_dir`, `active_plan_names`, `cmd_plan_complete`, `cmd_plan_status`),
+no user-facing strings (`"Plan archived:"`, `"No retro captured"`), no
+per-type tables (`frontmatter.PER_TYPE`, `status.py`'s debt-index line,
+`kb_seed`'s README rows). Each becomes a registry-driven generic:
+`stage_dir(dt, stage)`, `cmd_doc_complete`/`cmd_doc_status` for every
+closable type, overlap detection over the active stage of every closable
+type, dashboard lines over every row with `index_file`, README rows from
+`readme_label`, messages from `dt.key`/`dt.create_hint`. The executable
+form: a test walks `src/reinicorn` (AST identifiers and string literals,
+`doc_types.py` defaults excluded) and fails on any token equal to a
+default type key. Tests may still name the defaults — they are the fixture.
 
 ### 3. Gates: fixed events, graph-driven
 
@@ -138,8 +181,8 @@ skips, which is how a repo with no `closes` row gets no retro behavior.
 | `rcorn kb lint` | `closes` | `kb/closer-filled`: an active closee with a required closer whose closer is missing or has only placeholder sections → error (`_retro_is_empty` moves from `commands/plan.py` to the linter as `sections_empty`) |
 | `rcorn kb lint` | `closes` | `kb/lifecycle`: active closee whose `branch:` is gone from origin or whose `origin/<branch>` is an ancestor of `origin/main` → error "merged/deleted but still active — rcorn <type> complete". Network facts fail open as "cannot verify", mirroring `_live_remote_branches` |
 | pre-push | `depends_on` | `spec_gate.ensure_plan_spec_approved` becomes `ensure_dependencies_approved`: for each pushed branch, every branch-addressed type with `depends_on` is checked. Same fail-open-loud contract |
-| pre-merge CI | `closes` + sections | new job "Process gate" in `lint-kb.yml` running `rcorn _process-gate <branch>`: the three lint rules above scoped to that branch's docs; no governed docs → pass. Added to `main-pr-gate` required checks after the implementation merges (repo-settings action, recorded in the plan) |
-| `<type> complete` | `closes` | exit 1 without a filled required closer, next-step `rcorn <closer> create`; `--abandon` stamps `status: abandoned` / `lifecycle: dropped` and needs no closer |
+| pre-merge CI | `closes` + sections | new job "Process gate" in `lint-kb.yml` running `rcorn _process-gate <branch>`: exactly `kb/required-sections`, `kb/draft-refs` and `kb/closer-filled`, scoped to that branch's docs (`kb/lifecycle` is excluded by design — the branch under review is unmerged, and other branches' staleness must not red this PR); no governed docs → pass. The job also prints `rcorn doc-types show` so a process weakened by an overlay edit is visible in the check log. Added to `main-pr-gate` required checks after the implementation merges (repo-settings action, recorded in the plan) |
+| `<type> complete` | `closes` | exit 1 without a filled required closer, next-step rendered from the closer row's existing `create_hint` (honors a custom `create_verb`); `--abandon` stamps `status: abandoned` / `lifecycle: dropped` and needs no closer |
 | post-merge | `closes` | `_archive_stale_plans` calls the generic `complete`; the hook script stops piping stdout to `/dev/null` so a refusal and its next-step are visible in merge output |
 
 ### 4. Shipped defaults
@@ -162,7 +205,7 @@ doc_types:
   retro: {disabled: true}
   rfc:
     dir_path: rfcs
-    filename: "{slug}.md"
+    filename: "RFC-{seq:04}-{slug}.md"
     addressing: slug
     gated: true
     required_sections: [Summary, Motivation, Detailed Design, Drawbacks, Alternatives]
@@ -176,9 +219,10 @@ doc_types:
     depends_on: {field: rfc, type: rfc, status: approved}
 ```
 
-Gets: `rcorn rfc create` through the review lane, `rcorn adr create`, the
-draft-refs lint and pre-push gate on `adr.rfc`, required-section lint on
-both, no retro or completion machinery at all. Zero engine changes. The
+Gets: `rcorn rfc create` through the review lane with `RFC-0001-…`
+numbering, `rcorn adr create`, the draft-refs lint and pre-push gate on
+`adr.rfc`, required-section lint on both, `help_text`/`template_body`
+derived, no retro or completion machinery at all. Zero engine changes. The
 "phantom type" test from `registry-driven-doc-types` is extended with a
 synthetic closer/dependency pair and asserts placement, gate, lint and
 `complete` appear with no other change.
@@ -216,8 +260,13 @@ Repo prose, not engine:
   overlay; if a process needs a gate the engine lacks, that is an engine
   change with its own spec. The two relations are the whole vocabulary.
 - **Overlay is not review-gated.** `doc-types.yaml` ships with
-  `kb publish`; gating config changes through the review lane is a
-  follow-up if it proves necessary.
+  `kb publish`. The process gate guards a team norm, not an adversary: a
+  collaborator with kb push can already edit a retro to say "None." or
+  delete the plan outright, so gating the overlay alone would not raise
+  the bar. The kb repo's `main-safety` ruleset is the trust boundary;
+  the CI gate prints the effective registry (§3) so a weakening is at
+  least visible in the check log. Routing overlay edits through the
+  review lane is a follow-up if that visibility proves insufficient.
 - **Overlay does not live in the code repo.** Rejected above; revisit only
   if a per-repo override of a shared scope is needed.
 - No `.coderabbit.yaml` (decided 2026-08-21); no change to the
