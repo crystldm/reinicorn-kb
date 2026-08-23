@@ -23,25 +23,25 @@ from its draft, or touches more than its one file is red on the PR page
 before anyone reads prose. Merge-time guards in `review merge` stay.
 
 ## Acceptance Criteria
-- [ ] `workflows/reinicorn-doc-review-checks.yml` is bundled; `rcorn review
+- [x] `workflows/reinicorn-doc-review-checks.yml` is bundled; `rcorn review
   setup` installs it next to the cleanup workflow with the same
   `__REINICORN_REPO__` substitution, modified-file refusal, and `--force`
   overwrite (both assets iterated from one tuple; all refusals checked
   before any write, one commit).
-- [ ] The workflow runs on `pull_request` with two jobs whose `name:` values
+- [x] The workflow runs on `pull_request` with two jobs whose `name:` values
   equal the ruleset contexts exactly: "Doc lint" runs `rcorn kb lint` from
   a Reinicorn@main checkout with the PR head checked out into `kb/`;
   "Candidate integrity" runs `rcorn _review-check "$HEAD_REF"` (env
   indirection, never inlined). Install uses the documented
   `REINICORN_INSTALL_TOKEN || github.token` fallback; no new secrets.
-- [ ] `rcorn _review-check <head-ref>`: non-lane refs skip with rc 0; lane
+- [x] `rcorn _review-check <head-ref>`: non-lane refs skip with rc 0; lane
   refs fail (rc 1, agent-readable messages, all failures listed) when the
   diff vs current main is not exactly one added file at the final path,
   the candidate's `status:` is not `in-review`, the candidate body differs
   from `drafts/<slug>.md` on current main, or the draft is gone from main.
-- [ ] `_RULESET` carries a `required_status_checks` rule with both contexts
+- [x] `_RULESET` carries a `required_status_checks` rule with both contexts
   (`strict_required_status_checks_policy: false`); bypass actors unchanged.
-- [ ] `review setup` reconciliation flags an installed ruleset missing the
+- [x] `review setup` reconciliation flags an installed ruleset missing the
   checks rule (or a context) as outdated without `--force`, and under
   `--force` merges the rule in while preserving user rules/conditions and
   the existing bypass repair.
@@ -50,7 +50,7 @@ before anyone reads prose. Merge-time guards in `review merge` stay.
   dispatch); workflow asset structure/hardening/context-name consistency;
   setup multi-asset install + ruleset rule reconciliation. One manual
   live run of the new workflow on a kb PR after rollout.
-- [ ] Gate green: `uv run pytest tests/ -q`, ruff, pyright,
+- [x] Gate green: `uv run pytest tests/ -q`, ruff, pyright,
   `bash tests/run-all.sh`.
 
 ## Approach
