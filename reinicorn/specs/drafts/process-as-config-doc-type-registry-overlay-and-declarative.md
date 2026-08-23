@@ -61,6 +61,35 @@ spec → plan → retro, means forking the engine.
 
 ## Design
 
+### 0. Behaviors, not types
+
+The engine never asks *what* a doc is, only what it can do. A type is a
+named bundle of behaviors; the name exists for humans and the CLI. Every
+engine branch is `if dt.<behavior>` or `for dt in rows_with(<behavior>)`,
+never `if dt is X`. Each behavior is one registry field (or enum choice)
+and the events that react to it:
+
+| behavior | field | reacting events |
+|---|---|---|
+| addressed by slug / branch / singleton | `addressing`, `filename` | CLI arg shape, `doc_path`, validation |
+| numbered | `{seq}` in `filename` | create (allocate id), show (resolve id) |
+| review-gated | `gated` | create → drafts, review lane, status vocabulary, review stamps |
+| protected | `protected` | edit hook |
+| structured | `required_sections` | create template, `required-sections` lint |
+| indexed | `index_file` | freshness lint, dashboard |
+| appendable | `create_mode` | create |
+| seeded | `readme_label` | kb seed |
+| depends on | `depends_on` | `draft-refs` lint, pre-push gate |
+| closable / closer | `closes` | CLI `complete`/`status` verbs, staged `doc_path`, create placement, `closer-filled` + `lifecycle` lints, pre-merge gate, post-merge archive |
+
+`spec` = slug + gated + protected + structured + indexed + seeded; `retro`
+= branch + protected + structured + closer-of(plan); an `rfc` is spec's
+bundle plus numbered. The invariants in §1 are composition rules ("gated
+⇒ slug", "closer ⇒ bare filename"), which is why they carry no type names
+either. A new **type** is overlay data; a new **behavior** is an engine
+change with its own spec — the overlay composes behaviors, it cannot
+define them.
+
 ### 1. Registry overlay: `kb/<scope>/doc-types.yaml`
 
 `doc_types.REGISTRY` becomes the **built-in defaults**. The effective
@@ -172,6 +201,49 @@ form: a test walks `src/reinicorn` (AST identifiers and string literals,
 `doc_types.py` defaults excluded) and fails on any token equal to a
 default type key. Tests may still name the defaults — they are the fixture.
 
+### 2c. Code structure: adding a behavior is a field plus event hooks
+
+No `Behavior` base class, no plugin discovery, no hook bus. Behaviors are
+plain fields; events are the plain, explicit lists that already exist;
+one new shared helper removes the walk that every rule hand-rolls today.
+
+- **`doc_types.py`** — `DocType` fields, the defaults table, `validate()`
+  (all composition invariants in one function), `registry(root)` loader,
+  and the graph queries (`closer_of`, `dependencies_of`, `closable_types`,
+  `rows_with(field)`). The overlay schema is derived from the dataclass by
+  field name — there is no second schema to keep in sync; adding a field
+  makes it an overlay key and a `doc-types show` line automatically.
+- **`corpus.py`** (new) — `Doc(path, dt, meta, body)` and
+  `iter_docs(kb, scope=None)`, which yields every governed doc already
+  paired with its row and parsed frontmatter, plus `doc_path(dt, branch,
+  stage)` from §2. Lint rules, gates and the dashboard become
+  `for doc in iter_docs(kb): if doc.dt.<behavior>: …` — the only place the
+  kb layout is walked, so no rule can rebuild `kb/*/exec-plans/active` by
+  hand.
+- **Events keep their homes.** `cli.py` (generation loop), `doc_create.py`,
+  `doc_lifecycle.py` (today's `plan.py`, generic `complete`/`status`),
+  `linter/rules/<rule>.py` registered in `BUILTIN_RULES`, `pre_push.py`'s
+  ordered checks, `post_merge.py`, `process_gate.py`. Each reads the
+  field(s) it reacts to and nothing else.
+- **Shared behavior logic lives in one module only when ≥2 events need
+  it**, following `spec_refs.py` (lint + push gate): `refs.py` for
+  `depends_on`, `staging.py` for `closes` (stage resolution, move,
+  filled-check). A behavior touching one event lives in that event.
+
+The recipe, kept as the `doc_types.py` module docstring so it is read by
+whoever adds the next one:
+
+1. Add the field to `DocType` with an off-by-default value (or a new enum
+   member), so every existing row is unaffected, and its composition
+   invariant to `validate()`.
+2. For each event that reacts: one function or rule reading `dt.<field>`,
+   appended to that event's explicit list (and enabled in the seeded
+   `linters/.lint-config.json` for a lint rule).
+3. Extend the phantom-type test: a synthetic row with the behavior on
+   asserts each event fires; the defaults assert nothing changed.
+4. Document the field in the spec that introduces it; `doc-types show`
+   and the overlay accept it without further work.
+
 ### 3. Gates: fixed events, graph-driven
 
 | event | reads | rule |
@@ -242,8 +314,9 @@ Repo prose, not engine:
 
 ### 7. Stages (one PR each onto a `feat-process-as-config` integration branch)
 
-1. **Loader.** `registry(root)`, overlay parsing + validation, `fields`
-   absorption of `PER_TYPE`, `rcorn doc-types show`. Behavior-preserving.
+1. **Loader + corpus.** `registry(root)`, overlay parsing + `validate()`,
+   `fields` absorption of `PER_TYPE`, `rcorn doc-types show`, `corpus.py`
+   with existing lint rules ported onto `iter_docs`. Behavior-preserving.
 2. **Relations.** `depends_on`/`closes` fields, graph queries, literal sweep
    of the thirteen files, generic `complete`, phantom-pair test.
    Behavior-preserving (defaults unchanged).
