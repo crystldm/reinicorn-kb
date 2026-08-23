@@ -5,7 +5,7 @@ slug: cursor-session-start-compact-kb-status
 lifecycle: active
 status: in-review
 created: 2026-07-28
-updated: 2026-08-16
+updated: 2026-08-23
 author: Rodion Izotov
 origin: ai-assisted
 human_validated: false
@@ -91,7 +91,10 @@ RCORN="$(command -v rcorn || true)"
 [ -x "$RCORN" ] || exit 0
 command -v timeout >/dev/null 2>&1 || exit 0
 
-context="$(timeout 2s "$RCORN" kb status --compact 2>/dev/null || true)"
+# Discard partial stdout when timeout or rcorn exits non-zero.
+if ! context="$(timeout 2s "$RCORN" kb status --compact 2>/dev/null)"; then
+  exit 0
+fi
 [ -z "$context" ] && exit 0
 
 # Cursor sessionStart expects JSON with additional_context (not raw stdout).
@@ -215,6 +218,9 @@ script without a live Reinicorn repo (control `PATH` per test to steer which
 - **No rcorn:** neither on `PATH` nor at `.venv/bin/rcorn`; assert exit 0,
   empty stdout.
 - **Empty context:** stub rcorn that prints nothing; assert exit 0, empty stdout.
+- **CLI error / timeout:** stub rcorn that prints partial output then exits
+  non-zero, or hangs past `timeout 2s`; assert exit 0, empty stdout (do not
+  inject the partial capture).
 - **No jq:** assert exit 0, empty stdout (fail-open).
 
 ### `hooks_install` integration test
@@ -292,7 +298,7 @@ get platform instructions; `rcorn hooks install` (run during init and after
       `rcorn hooks install`; re-run is idempotent.
 - [ ] Hook test (`tests/test_session_start_status_hook.py`): valid JSON on
       happy path; silent exit 0 without any resolvable `rcorn`, empty context,
-      timeout, or missing `jq`.
+      timeout or CLI error (including partial stdout), or missing `jq`.
 - [ ] Reinicorn source repo `.cursor/hooks.json` includes the `sessionStart`
       entry; `test_source_editor_integrations.py` passes.
 - [ ] `rcorn update` invokes `hooks install` after every successful exit,
