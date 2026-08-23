@@ -133,8 +133,11 @@ number is allocated at create time as max-existing + 1, found by matching
 the pattern's own regex over the type's dir (and `drafts/` when gated, so
 two open drafts never collide), and stamped into the doc's `id` field
 (`RFC-0007`). `show` resolves either the id or the slug. The slug stays the
-identity for review-lane refs and `depends_on`; the number is a display
-prefix, never re-allocated.
+sole identity for review-lane refs and `depends_on`; the number is a
+best-effort-unique display prefix. Allocation is not atomic: concurrent
+creates in two checkouts, or deleting the current maximum, can produce a
+duplicate or reused number. That is accepted — it cannot break identity or
+refs — and `show <id>` errors listing the matches when an id is ambiguous.
 
 The per-type frontmatter vocabulary moves into the row too — `fields` and
 `required_fields` absorb `frontmatter.PER_TYPE` / `PER_TYPE_REQUIRED` — so
@@ -251,11 +254,11 @@ whoever adds the next one:
 | `rcorn kb lint` | `required_sections` | `kb/required-sections`: every doc of every type with a non-empty list carries the headers (generalizes `plan_structure`, which was `registry-driven-doc-types` stage 4, never shipped) |
 | `rcorn kb lint` | `depends_on` | `kb/draft-refs` unchanged in behavior, now iterates every row with `depends_on` |
 | `rcorn kb lint` | `closes` | `kb/closer-filled`: an active closee with a required closer whose closer is missing or has only placeholder sections → error (`_retro_is_empty` moves from `commands/plan.py` to the linter as `sections_empty`) |
-| `rcorn kb lint` | `closes` | `kb/lifecycle`: active closee whose `branch:` is gone from origin or whose `origin/<branch>` is an ancestor of `origin/main` → error "merged/deleted but still active — rcorn <type> complete". Network facts fail open as "cannot verify", mirroring `_live_remote_branches` |
+| `rcorn kb lint` | `closes` | `kb/lifecycle`: active closee whose branch is merged or deleted → error "merged/deleted but still active — rcorn <type> complete". Merged-ness needs three signals, checked in order, because squash merges leave a retained branch that is *not* an ancestor of main: branch gone from origin; `origin/<branch>` an ancestor of `origin/main` (merge-commit case); a merged PR with that head per `gh pr list --state merged --head <branch>` (squash case, authoritative). All network facts fail open as "cannot verify", mirroring `_live_remote_branches`; enabling GitHub's delete-branch-on-merge makes the first signal usually suffice and is recommended in the rollout |
 | pre-push | `depends_on` | `spec_gate.ensure_plan_spec_approved` becomes `ensure_dependencies_approved`: for each pushed branch, every branch-addressed type with `depends_on` is checked. Same fail-open-loud contract |
 | pre-merge CI | `closes` + sections | new job "Process gate" in `lint-kb.yml` running `rcorn _process-gate <branch>`: exactly `kb/required-sections`, `kb/draft-refs` and `kb/closer-filled`, scoped to that branch's docs (`kb/lifecycle` is excluded by design — the branch under review is unmerged, and other branches' staleness must not red this PR); no governed docs → pass. The job also prints `rcorn doc-types show` so a process weakened by an overlay edit is visible in the check log. Added to `main-pr-gate` required checks after the implementation merges (repo-settings action, recorded in the plan) |
 | `<type> complete` | `closes` | exit 1 without a filled required closer, next-step rendered from the closer row's existing `create_hint` (honors a custom `create_verb`); `--abandon` stamps `status: abandoned` / `lifecycle: dropped` and needs no closer |
-| post-merge | `closes` | `_archive_stale_plans` calls the generic `complete`; the hook script stops piping stdout to `/dev/null` so a refusal and its next-step are visible in merge output |
+| post-merge | `closes` | the archival sweep iterates `closable_types()` (today's `_archive_stale_plans`, renamed per §2b) and calls the generic `complete` for each stale doc; the hook script stops piping stdout to `/dev/null` so a refusal and its next-step are visible in merge output |
 
 ### 4. Shipped defaults
 
@@ -292,7 +295,10 @@ doc_types:
 ```
 
 Gets: `rcorn rfc create` through the review lane with `RFC-0001-…`
-numbering, `rcorn adr create`, the draft-refs lint and pre-push gate on
+numbering (stage 2's literal sweep makes the lane operate on
+`gated_types()` rather than the spec row, superseding the "review lane
+stays specs-only" non-goal of `registry-driven-doc-types` at the
+*mechanism* level — the shipped defaults still gate only `spec`), `rcorn adr create`, the draft-refs lint and pre-push gate on
 `adr.rfc`, required-section lint on both, `help_text`/`template_body`
 derived, no retro or completion machinery at all. Zero engine changes. The
 "phantom type" test from `registry-driven-doc-types` is extended with a
