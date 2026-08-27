@@ -3,7 +3,7 @@ type: spec
 title: 'Process-as-config: doc-type registry overlay and declarative type relations'
 slug: process-as-config-doc-type-registry-overlay-and-declarative
 lifecycle: active
-status: in-review
+status: approved
 created: 2026-08-22
 author: Michael Biehl
 origin: ai-assisted
