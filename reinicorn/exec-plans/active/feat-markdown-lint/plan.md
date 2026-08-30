@@ -48,16 +48,16 @@ The behavioral contract (kb violations reported with `kb/` prefix, gitignored/ex
 
 ## Acceptance Criteria
 
-- [ ] `rcorn kb lint` runs `docs/markdown` and reports violations as `path:line — [MDxxx] message`.
-- [ ] With rumdl unavailable and no usable uv, the rule prints the install hint and exits 0.
-- [ ] A fence with no language is reported; a clean file is not.
-- [ ] Shipped config yields zero `MD036`/`MD013` violations across repo and kb.
-- [ ] `rumdl` present in `[dependency-groups] dev`, pinned in `uv.lock`.
-- [ ] No findings from `node_modules/`, `.claude/worktrees/`, `presentation/`, or gitignored paths.
-- [ ] Review-stamped docs produce no `MD034`; docs with `title:` + body H1 produce no `MD025` (verify only — the frontmatter migration already landed).
-- [ ] Rule registered at `warning`; `rcorn kb lint` exits 0 against the backlog.
-- [ ] `rcorn init` seeds `.rumdl.toml` into a fresh project.
-- [ ] Tests cover: tool-present, tool-absent, violations-found, clean, exclusions.
+- [x] `rcorn kb lint` runs `docs/markdown` and reports violations as `path:line — [MDxxx] message`.
+- [x] With rumdl unavailable and no usable uv, the rule prints the install hint and exits 0.
+- [x] A fence with no language is reported; a clean file is not.
+- [x] Shipped config yields zero `MD036`/`MD013` violations across repo and kb.
+- [x] `rumdl` present in `[dependency-groups] dev`, pinned in `uv.lock`.
+- [x] No findings from `node_modules/`, `.claude/worktrees/`, `presentation/`, or gitignored paths.
+- [x] Review-stamped docs produce no `MD034`; docs with `title:` + body H1 produce no `MD025` (verify only — the frontmatter migration already landed).
+- [x] Rule registered at `warning`; `rcorn kb lint` exits 0 against the backlog.
+- [x] `rcorn init` seeds `.rumdl.toml` into a fresh project.
+- [x] Tests cover: tool-present, tool-absent, violations-found, clean, exclusions.
 
 ## Tasks
 
@@ -71,7 +71,7 @@ The behavioral contract (kb violations reported with `kb/` prefix, gitignored/ex
 **Interfaces:**
 - Produces: `.rumdl.toml` at the repo root (Task 2's tests copy it into fixtures; Task 3 ships it as an asset), and `rumdl` invocable via `uv run --no-sync rumdl`.
 
-- [ ] **Step 1: Create `.rumdl.toml`** at the repo root, exactly:
+- [x] **Step 1: Create `.rumdl.toml`** at the repo root, exactly:
 
 ```toml
 [global]
@@ -79,7 +79,7 @@ disable = ["MD013", "MD025", "MD033", "MD036", "MD041"]
 exclude = ["node_modules", ".claude/worktrees", "presentation"]
 ```
 
-- [ ] **Step 2: Add the dev dependency.** In `pyproject.toml`, find `[dependency-groups]` and add `"rumdl>=0.2.44",` to the `dev` list, next to `ruff`. Then run:
+- [x] **Step 2: Add the dev dependency.** In `pyproject.toml`, find `[dependency-groups]` and add `"rumdl>=0.2.44",` to the `dev` list, next to `ruff`. Then run:
 
 ```bash
 uv sync
@@ -87,7 +87,7 @@ uv sync
 
 Expected: `uv.lock` gains a pinned `rumdl` entry; `uv run --no-sync rumdl --version` prints a version >= 0.2.44.
 
-- [ ] **Step 3: Smoke the config against the repo.** Run:
+- [x] **Step 3: Smoke the config against the repo.** Run:
 
 ```bash
 uv run --no-sync rumdl check --output-format concise . 2>&1 | grep -oE '\[MD[0-9]+\]' | sort | uniq -c | sort -rn
@@ -95,9 +95,9 @@ uv run --no-sync rumdl check --output-format concise . 2>&1 | grep -oE '\[MD[0-9
 
 Expected: violations exist (backlog is known, was ~900 across repo+kb in July), but ZERO counts for `MD013`, `MD025`, `MD033`, `MD036`, `MD041`. If any disabled rule appears, the config isn't being read — stop and investigate (rumdl reads `.rumdl.toml` from the current directory). Record the observed rule counts in your report.
 
-- [ ] **Step 4: Confirm the kb is invisible to this pass** (motivates Task 2's second pass): the output of Step 3 must contain no `kb/` paths. Also confirm `.venv/` and `.claude/worktrees/` produce no findings. Record both observations.
+- [x] **Step 4: Confirm the kb is invisible to this pass** (motivates Task 2's second pass): the output of Step 3 must contain no `kb/` paths. Also confirm `.venv/` and `.claude/worktrees/` produce no findings. Record both observations.
 
-- [ ] **Step 5: Gate and commit.**
+- [x] **Step 5: Gate and commit.**
 
 ```bash
 uv run pytest tests/ -q && uv run ruff check src/reinicorn tests && uv run pyright src/reinicorn
@@ -116,7 +116,7 @@ git commit -m "feat(lint): add rumdl dev dependency and .rumdl.toml baseline"
 - Consumes: `.rumdl.toml` from Task 1 (tests copy the real shipped file into fixtures).
 - Produces: rule name `docs/markdown` (derived by the runner from the path — no runner change), registered in `.lint-config.json`.
 
-- [ ] **Step 1: Write the failing tests** at `tests/linter/test_markdown_rule.py`:
+- [x] **Step 1: Write the failing tests** at `tests/linter/test_markdown_rule.py`:
 
 ```python
 """Tests for the docs/markdown external lint rule (linters/rules/docs/markdown.sh)."""
@@ -220,7 +220,7 @@ def test_tool_absent_skips_with_hint(tmp_path: Path):
     assert "rumdl not found — skipping. Install with: pip install rumdl" in result.stdout
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail.**
+- [x] **Step 2: Run the tests to verify they fail.**
 
 ```bash
 uv run pytest tests/linter/test_markdown_rule.py -v
@@ -228,7 +228,7 @@ uv run pytest tests/linter/test_markdown_rule.py -v
 
 Expected: FAIL — the script does not exist yet.
 
-- [ ] **Step 3: Write `linters/rules/docs/markdown.sh`:**
+- [x] **Step 3: Write `linters/rules/docs/markdown.sh`:**
 
 ```bash
 #!/usr/bin/env bash
@@ -290,13 +290,13 @@ exit "$FAILED"
 
 Then `chmod 755 linters/rules/docs/markdown.sh`.
 
-- [ ] **Step 4: Register the rule.** In `linters/.lint-config.json`, add after the `scripts/shellcheck` entry:
+- [x] **Step 4: Register the rule.** In `linters/.lint-config.json`, add after the `scripts/shellcheck` entry:
 
 ```json
 "docs/markdown": { "enabled": true, "severity": "warning" }
 ```
 
-- [ ] **Step 5: Run the tests until they pass.**
+- [x] **Step 5: Run the tests until they pass.**
 
 ```bash
 uv run pytest tests/linter/test_markdown_rule.py -v
@@ -304,7 +304,7 @@ uv run pytest tests/linter/test_markdown_rule.py -v
 
 Expected: 6/6 PASS. If a test fails because rumdl's real CLI behavior differs from the script's assumptions (config discovery from cwd, `./`-prefixed paths, kb-pass config lookup), fix the SCRIPT to meet the tests' behavioral contract — the contract itself only changes if rumdl genuinely cannot express it, and that goes in your report.
 
-- [ ] **Step 6: Verify against the real repo.** Run:
+- [x] **Step 6: Verify against the real repo.** Run:
 
 ```bash
 bash linters/rules/docs/markdown.sh "$(pwd)" | head -20; echo "exit: ${PIPESTATUS[0]}"
@@ -313,7 +313,7 @@ uv run rcorn kb lint 2>&1 | tail -15
 
 Expected: real violations in `path:line — [MDxxx] message` format including `kb/`-prefixed paths, script exit 1; `rcorn kb lint` shows `[FAIL:WARNING] docs/markdown` and overall EXIT CODE 0 (warning severity — run `echo $?` to confirm). (`uv run rcorn` is correct here: this exercises uncommitted code.)
 
-- [ ] **Step 7: Full gate and commit.**
+- [x] **Step 7: Full gate and commit.**
 
 ```bash
 uv run pytest tests/ -q && uv run ruff check src/reinicorn tests && uv run pyright src/reinicorn
@@ -331,7 +331,7 @@ git commit -m "feat(lint): add the docs/markdown rule backed by rumdl, registere
 **Interfaces:**
 - Consumes: `.rumdl.toml` from Task 1; `get_asset_path()` from `src/reinicorn/assets.py` (resolves `_data/` in wheels, repo root in editable installs — `.rumdl.toml` at the repo root already resolves in dev with no extra work).
 
-- [ ] **Step 1: Write the failing test.** Find the existing test covering init's linters copy and add, in the same test or a sibling following its exact fixture pattern:
+- [x] **Step 1: Write the failing test.** Find the existing test covering init's linters copy and add, in the same test or a sibling following its exact fixture pattern:
 
 ```python
 assert (project / ".rumdl.toml").exists()
@@ -339,13 +339,13 @@ assert (project / ".rumdl.toml").exists()
 
 (where `project` is that test's initialized-project path). Run it; expected: FAIL.
 
-- [ ] **Step 2: Bundle the asset.** In `pyproject.toml` under `[tool.hatch.build.targets.wheel.force-include]`, add:
+- [x] **Step 2: Bundle the asset.** In `pyproject.toml` under `[tool.hatch.build.targets.wheel.force-include]`, add:
 
 ```toml
 ".rumdl.toml" = "reinicorn/_data/.rumdl.toml"
 ```
 
-- [ ] **Step 3: Seed on init.** In `src/reinicorn/commands/init.py`, extend `_copy_lint_config` to also copy the markdown lint config:
+- [x] **Step 3: Seed on init.** In `src/reinicorn/commands/init.py`, extend `_copy_lint_config` to also copy the markdown lint config:
 
 ```python
 def _copy_lint_config(target_dir: Path) -> None:
@@ -366,7 +366,7 @@ def _copy_lint_config(target_dir: Path) -> None:
         print()
 ```
 
-- [ ] **Step 4: Run the test to verify it passes.**
+- [x] **Step 4: Run the test to verify it passes.**
 
 ```bash
 uv run pytest tests/ -q -k "init"
@@ -374,7 +374,7 @@ uv run pytest tests/ -q -k "init"
 
 Expected: PASS, including the new assertion.
 
-- [ ] **Step 5: Full gate and commit.**
+- [x] **Step 5: Full gate and commit.**
 
 ```bash
 uv run pytest tests/ -q && uv run ruff check src/reinicorn tests && uv run pyright src/reinicorn
