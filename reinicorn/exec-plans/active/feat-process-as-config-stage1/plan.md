@@ -82,6 +82,11 @@ of type-named code paths is stage 2). PR targets the
 - `--schema` proved cheap and is included (`rcorn doc-types show --schema`).
 - Registry-generated dispatch rows moved from cli import time to dispatch
   time so a broken overlay fails closed as a clean error, not a traceback.
+- `spec_refs.py` is untouched in stage 1 (review call on PR #65): rather
+  than half-convert a module stage 2 dissolves anyway, its constants stay
+  built-in-only — overlay-added type dirs are invisible to the draft-refs
+  prose matcher until stage 2 replaces the module with generic relation
+  resolution.
 
 ## Dependencies
 Spec approved via reinicorn-kb PR #18. Integration branch
