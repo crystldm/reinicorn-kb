@@ -31,8 +31,9 @@ stage 3.
       declared field, `closes` pairs both branch-addressed, one enabled
       closer per closee, no closer chains).
 - [x] Graph queries on the effective registry — `closer_of`,
-      `closable_types`, `dependencies_of`, `rows_with(field)` — with
-      None/empty meaning "skip the behavior".
+      `closable_types`, `dependencies_of` — with None/empty meaning "skip
+      the behavior" (`rows_with(field)` dropped: callers filter inline,
+      a wrapper added nothing).
 - [x] `spec_refs.py` dissolves: type-agnostic resolution machinery moves
       to `refs.py` serving `depends_on` generically (draft-refs lint +
       pre-push gate become relation-driven); spec-specific functions and
