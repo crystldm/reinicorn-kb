@@ -26,39 +26,54 @@ so with the shipped registry the only new red is `kb/lifecycle` on a
 merged-but-active plan.
 
 ## Acceptance Criteria
-- [ ] `kb/required-sections`: every doc of every type with a non-empty
+- [x] `kb/required-sections`: every doc of every type with a non-empty
       `required_sections` carries the headers, except docs already in a
       completed stage (spec non-goal: no retroactive sections). Keeps the
       missing-doc-in-active-dir and `depends_on`-field-present checks.
       `kb/plan-structure` stays accepted as a config alias (stage 2's
       compat decision) and is reported as such.
-- [ ] `kb/closer-filled`: an active closee whose row has a required closer,
+- [x] `kb/closer-filled`: an active closee whose row has a required closer,
       with the closer missing or placeholder-only, is an error naming the
       closer's `create_hint`.
-- [ ] `kb/lifecycle`: an active closee whose branch is merged or deleted is
+- [x] `kb/lifecycle`: an active closee whose branch is merged or deleted is
       an error "merged/deleted but still active — rcorn <type> complete".
       Three signals in spec order (published-then-deleted with evidence,
       ancestor of `origin/HEAD`, merged PR by head); every network fact
       fails open as "cannot verify"; only the project's own scope is
       judged (other scopes belong to other repos).
-- [ ] `kb/draft-refs` unchanged.
-- [ ] `<type> complete` exits 1 without a filled required closer, next-step
+- [x] `kb/draft-refs` unchanged.
+- [x] `<type> complete` exits 1 without a filled required closer, next-step
       from the closer row's `create_hint`; `--abandon` stamps
       `status: abandoned` / `lifecycle: dropped` and needs no closer. The
       post-merge sweep's refusal is visible in merge output.
-- [ ] `rcorn _process-gate <branch>`: exactly required-sections, draft-refs
+- [x] `rcorn _process-gate <branch>`: exactly required-sections, draft-refs
       and closer-filled, scoped to that branch's governed docs; no docs →
       pass. New "Process gate" job in `lint-kb.yml` that also prints
       `rcorn doc-types show`. The lint job gets `GH_TOKEN` so the merged-PR
       signal works in CI.
-- [ ] Phantom-pair test extended: the synthetic closer with
+- [x] Phantom-pair test extended: the synthetic closer with
       `required: true` drives refusal, abandon, closer-filled and the gate;
       the defaults assert nothing changed but the lifecycle rule.
-- [ ] Kb clean: every active plan whose PR merged is completed; the 8
+- [x] Kb clean: every active plan whose PR merged is completed; the 8
       without a retro get one backfilled from the PR record (Spec Drift
       stated where determinable); `rcorn kb lint` green with the new rules
       at error severity.
-- [ ] Full gate green (pytest, ruff, pyright, coverage floor).
+- [x] Full gate green (pytest, ruff, pyright, coverage floor).
+
+## Spec Drift
+- `kb/required-sections` judges docs still being authored, not "every doc
+  of every type": completed-stage docs, docs whose lifecycle is closed,
+  and approved docs of gated types are exempt — **accepted**. Five legacy
+  specs predate the template; re-linting approved gated docs would force
+  review-lane PRs to rewrite history, and drafts are linted by the lane's
+  own CI before approval.
+- Rule renamed to `kb/required-sections` with `kb/plan-structure` kept as
+  a config alias (stage 2 had frozen the old name) — **amended** toward
+  the spec.
+- Hook script unchanged: it already lets stdout through — **accepted**
+  (no-op).
+- Backfill covered 8 retro-less merged plans (the spec counted 7 at
+  writing time; one more merged since) — **accepted**.
 
 ## Approach
 Per spec §2c: the rules are plain functions over `iter_docs` / the stage
@@ -71,20 +86,20 @@ diagnostics to the branch's doc paths — no second walk. PR targets the
 `feat-process-as-config` integration branch.
 
 ## Tasks
-- [ ] `staging.closer_gap()` + `stage_root()`; `complete` refusal and
+- [x] `staging.closer_gap()` + `stage_root()`; `complete` refusal and
       `--abandon` (CLI flag, dispatch, lifecycle command).
-- [ ] Generalize the structure rule to required-sections; runner alias
+- [x] Generalize the structure rule to required-sections; runner alias
       for `kb/plan-structure`; seeded `linters/.lint-config.json` rows for
       the four rules.
-- [ ] `kb/closer-filled` and `kb/lifecycle` rules; `gh_pr_heads` in
+- [x] `kb/closer-filled` and `kb/lifecycle` rules; `gh_pr_heads` in
       `github.py`.
-- [ ] `commands/internal/process_gate.py`, `_process-gate` dispatch,
+- [x] `commands/internal/process_gate.py`, `_process-gate` dispatch,
       `lint-kb.yml` job + `GH_TOKEN`.
-- [ ] Tests: lifecycle refusal/abandon, three rules, gate scoping, phantom
+- [x] Tests: lifecycle refusal/abandon, three rules, gate scoping, phantom
       pair, sweep visibility.
-- [ ] Docs: README / GETTING-STARTED (`--abandon`, new lints),
+- [x] Docs: README / GETTING-STARTED (`--abandon`, new lints),
       `linters/README.md` rule table.
-- [ ] Kb: backfill retros, complete merged plans, publish; verify
+- [x] Kb: backfill retros, complete merged plans, publish; verify
       `rcorn kb lint` green.
 
 ## Dependencies
