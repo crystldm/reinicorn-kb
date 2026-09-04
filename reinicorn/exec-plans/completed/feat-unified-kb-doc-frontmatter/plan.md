@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: feat/unified-kb-doc-frontmatter'
 slug: feat-unified-kb-doc-frontmatter
-lifecycle: active
-status: planning
+lifecycle: done
+status: complete
 created: 2026-07-27
 author: Michael Biehl
 branch: feat/unified-kb-doc-frontmatter
