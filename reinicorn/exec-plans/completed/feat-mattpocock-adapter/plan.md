@@ -2,15 +2,15 @@
 type: plan
 title: 'Execution Plan: feat-mattpocock-adapter'
 slug: feat-mattpocock-adapter
-lifecycle: active
-status: planning
+lifecycle: done
+status: complete
 created: 2026-08-20
 author: Michael Biehl
 origin: ai-assisted
 human_validated: false
 branch: feat-mattpocock-adapter
 ticket: N/A
-spec: 'specs/skill-base-agnostic-reinicorn-adapter-infrastructure-for-ext.md'
+spec: specs/skill-base-agnostic-reinicorn-adapter-infrastructure-for-ext.md
 ---
 
 # Execution Plan: feat-mattpocock-adapter
