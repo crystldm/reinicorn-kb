@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: fix/claude-hooks-project-dir'
 slug: fix-claude-hooks-project-dir
-lifecycle: active
-status: in-progress
+lifecycle: done
+status: complete
 created: 2026-08-11
 author: Michael Biehl
 branch: fix/claude-hooks-project-dir
