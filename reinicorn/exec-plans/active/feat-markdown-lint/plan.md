@@ -17,7 +17,9 @@ spec: specs/markdown-linting-a-docs-markdownlint-rule-and-a-config-basel.md
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Local markdown linting: a `docs/markdown` lint rule backed by rumdl, with a tuned config baseline that produces zero violations from house style, registered at `warning` severity so it lands green.
+## Goal
+
+Local markdown linting: a `docs/markdown` lint rule backed by rumdl, with a tuned config baseline that produces zero violations from house style, registered at `warning` severity so it lands green.
 
 **Architecture:** A new external `.sh` rule at `linters/rules/docs/markdown.sh` (auto-discovered by the existing runner — no runner change), a `.rumdl.toml` config at the repo root shipped as a Reinicorn asset and seeded by `rcorn init`, and `rumdl` as a dev dependency. The rule degrades to a skip (exit 0) when the tool is absent.
 
