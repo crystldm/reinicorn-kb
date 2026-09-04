@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: process-as-config stage 1 — registry loader + corpus'
 slug: feat-process-as-config-stage1
-lifecycle: active
-status: in-progress
+lifecycle: done
+status: complete
 created: 2026-08-28
 author: Michael Biehl
 origin: ai-assisted
