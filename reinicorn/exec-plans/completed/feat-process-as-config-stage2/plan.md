@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: process-as-config stage 2 — relations + literal sweep'
 slug: feat-process-as-config-stage2
-lifecycle: active
-status: in-progress
+lifecycle: done
+status: complete
 created: 2026-08-31
 author: Michael Biehl
 origin: ai-assisted
