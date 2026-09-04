@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: fix/path-scoped-create-commits'
 slug: fix-path-scoped-create-commits
-lifecycle: active
-status: in-progress
+lifecycle: done
+status: complete
 created: 2026-07-31
 author: Michael Biehl
 branch: fix/path-scoped-create-commits
