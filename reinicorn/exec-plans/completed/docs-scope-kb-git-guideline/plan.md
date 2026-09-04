@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: docs/scope-kb-git-guideline'
 slug: docs-scope-kb-git-guideline
-lifecycle: active
-status: in-progress
+lifecycle: done
+status: complete
 created: 2026-08-04
 author: Michael Biehl
 branch: docs/scope-kb-git-guideline
