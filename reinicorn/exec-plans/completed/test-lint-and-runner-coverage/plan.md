@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: test/lint-and-runner-coverage'
 slug: test-lint-and-runner-coverage
-lifecycle: active
-status: planning
+lifecycle: done
+status: complete
 created: 2026-07-25
 author: Michael Biehl
 branch: test/lint-and-runner-coverage
