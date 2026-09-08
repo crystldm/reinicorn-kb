@@ -2,8 +2,8 @@
 type: plan
 title: 'Execution Plan: process-as-config stage 3 — gates'
 slug: feat-process-as-config-stage3
-lifecycle: active
-status: in-progress
+lifecycle: done
+status: complete
 created: 2026-09-04
 author: Michael Biehl
 origin: ai-assisted
