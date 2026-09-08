@@ -25,33 +25,33 @@ template), and the "Process gate" check becomes required on `main` once
 the integration branch lands there.
 
 ## Acceptance Criteria
-- [ ] `retro.closes.required` is `true` in the built-in row: with no
+- [x] `retro.closes.required` is `true` in the built-in row: with no
       overlay, `rcorn plan complete` refuses without a filled retro and
       `--abandon` is the recorded escape.
-- [ ] `Spec Drift` is the retro's fifth required section. A new retro
+- [x] `Spec Drift` is the retro's fifth required section. A new retro
       scaffolds it with a placeholder stating the content contract (every
       deviation from the plan's declared `spec:` with a disposition —
       amended / debted / accepted — or the single word "None."). The
       placeholder comes from a `section_hints` row field so an overlay can
       set its own; `sections_empty` still treats it as unfilled.
-- [ ] Whole-kb `kb/closer-filled` reports only an empty closer stub (retro
+- [x] Whole-kb `kb/closer-filled` reports only an empty closer stub (retro
       present, placeholder-only). A missing retro on an in-progress plan
       is not a whole-kb finding; the process gate and `complete` enforce
       it where the retro is due (see Spec Drift).
-- [ ] `rcorn _process-gate` still fails on a missing required closer, so
+- [x] `rcorn _process-gate` still fails on a missing required closer, so
       a PR cannot merge without its retro.
-- [ ] AGENTS.md: "Pull requests" states spec-drift status ("matches spec"
+- [x] AGENTS.md: "Pull requests" states spec-drift status ("matches spec"
       or the deviation list with dispositions); a "Reviewing" section
       makes undisclosed drift a blocking finding and holds the retro to the
       code's bar.
-- [ ] PR template: the stale kb checklist (`progress.md`, `decisions.md`,
+- [x] PR template: the stale kb checklist (`progress.md`, `decisions.md`,
       `kb/exec-plans/` paths) is replaced with "retro filled incl. Spec
       Drift" and "drift dispositions recorded".
-- [ ] Docs follow the defaults: README, GETTING-STARTED, `linters/README.md`.
-- [ ] Kb: the stage 3 plan gets its retro (with Spec Drift) and is
+- [x] Docs follow the defaults: README, GETTING-STARTED, `linters/README.md`.
+- [x] Kb: the stage 3 plan gets its retro (with Spec Drift) and is
       completed; this branch's retro is filled in this PR because the gate
       now demands it; `rcorn kb lint` is green under the flipped defaults.
-- [ ] Full gate green (pytest, ruff, pyright, coverage floor).
+- [x] Full gate green (pytest, ruff, pyright, coverage floor).
 - [ ] After `feat-process-as-config` merges to `main`: "Process gate" added
       to the `main-pr-gate` required status checks (repo-settings action —
       only then, because a required check must exist in `main`'s workflow
@@ -80,15 +80,15 @@ whole-kb runner uses the default (stubs only). Prose changes are repo
 files only. PR targets `feat-process-as-config`.
 
 ## Tasks
-- [ ] Defaults: `retro.closes.required=True`, `Spec Drift` section,
+- [x] Defaults: `retro.closes.required=True`, `Spec Drift` section,
       `section_hints` field + coercion + validation + render + `doc-types
       show`, schema output.
-- [ ] `kb/closer-filled` presence mode; gate strict.
-- [ ] Tests: defaults graph, retro scaffold, render hints, overlay
+- [x] `kb/closer-filled` presence mode; gate strict.
+- [x] Tests: defaults graph, retro scaffold, render hints, overlay
       coercion, closer-filled modes, gate, lifecycle default refusal.
-- [ ] AGENTS.md, `.github/PULL_REQUEST_TEMPLATE.md`, README,
+- [x] AGENTS.md, `.github/PULL_REQUEST_TEMPLATE.md`, README,
       GETTING-STARTED, `linters/README.md`.
-- [ ] Kb: stage 3 retro + complete; stage 4 retro; lint green; publish.
+- [x] Kb: stage 3 retro + complete; stage 4 retro; lint green; publish.
 - [ ] Post-main-merge: `main-pr-gate` required check.
 
 ## Dependencies
