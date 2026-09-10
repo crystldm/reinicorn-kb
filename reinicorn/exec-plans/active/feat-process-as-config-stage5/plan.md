@@ -3,7 +3,7 @@ type: plan
 title: 'Execution Plan: feat-process-as-config-stage5'
 slug: feat-process-as-config-stage5
 lifecycle: active
-status: planning
+status: in_progress
 created: 2026-09-10
 author: Michael Biehl
 origin: ai-assisted
@@ -24,14 +24,14 @@ line" would be *the documented way to customize* and no stage owned writing
 it. Docs only; no engine change.
 
 ## Acceptance Criteria
-- [ ] README: doc-type table labelled as the *default* types; new
+- [x] README: doc-type table labelled as the *default* types; new
       "Customizing the process" section covering overlay location, override /
       add / disable semantics, fail-closed validation, `rcorn doc-types show`
       and `--schema`, and the RFC → ADR worked example from spec §5
-- [ ] GETTING-STARTED: one paragraph pointing at that section
-- [ ] linters/README: states once that the process rules read the registry,
+- [x] GETTING-STARTED: one paragraph pointing at that section
+- [x] linters/README: states once that the process rules read the registry,
       so a custom type gets them without new rules
-- [ ] `upgrades/v0.4.md`: release note for the overlay, required retro and
+- [x] `upgrades/v0.4.md`: release note for the overlay, required retro and
       Spec Drift, Process gate check
 - [ ] `rcorn kb lint` and the process gate pass; gate suite green
 
@@ -45,11 +45,11 @@ is the model. Content is drawn from spec §1/§5 and the loader docstrings, not
 invented.
 
 ## Tasks
-- [ ] README "Customizing the process" + table heading
-- [ ] GETTING-STARTED pointer paragraph
-- [ ] linters/README registry sentence
-- [ ] upgrades/v0.4.md
-- [ ] Retro filled (Spec Drift), lint + gate, PR onto the integration branch
+- [x] README "Customizing the process" + table heading
+- [x] GETTING-STARTED pointer paragraph
+- [x] linters/README registry sentence
+- [x] upgrades/v0.4.md
+- [x] Retro filled (Spec Drift), lint + gate, PR onto the integration branch
 
 ## Dependencies
 Branches from `feat-process-as-config-stage4` (PR #74, unmerged) because it
