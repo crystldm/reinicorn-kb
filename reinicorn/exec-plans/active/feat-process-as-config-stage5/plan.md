@@ -10,23 +10,52 @@ origin: ai-assisted
 human_validated: false
 branch: feat-process-as-config-stage5
 ticket: N/A
-spec: '[kb path to the spec this implements, or N/A]'
+spec: reinicorn/specs/process-as-config-doc-type-registry-overlay-and-declarative.md
 ---
 
 # Execution Plan: feat-process-as-config-stage5
 
 ## Goal
-[What this branch is building/fixing]
+Ship the manual for process-as-config. Stages 1-4 made the doc process data
+(`kb/<scope>/doc-types.yaml`, `rcorn doc-types show`), but no user-facing doc
+says the process is configurable or how: the string `doc-types.yaml` appears
+in no markdown outside the spec. Spec §1 assumed "copy the row, change one
+line" would be *the documented way to customize* and no stage owned writing
+it. Docs only; no engine change.
 
 ## Acceptance Criteria
-- [ ] [criterion from ticket or manual entry]
+- [ ] README: doc-type table labelled as the *default* types; new
+      "Customizing the process" section covering overlay location, override /
+      add / disable semantics, fail-closed validation, `rcorn doc-types show`
+      and `--schema`, and the RFC → ADR worked example from spec §5
+- [ ] GETTING-STARTED: one paragraph pointing at that section
+- [ ] linters/README: states once that the process rules read the registry,
+      so a custom type gets them without new rules
+- [ ] `upgrades/v0.4.md`: release note for the overlay, required retro and
+      Spec Drift, Process gate check
+- [ ] `rcorn kb lint` and the process gate pass; gate suite green
 
 ## Approach
-[High-level approach, key decisions]
+Product docs keep describing spec → plan → retro as the shipped default
+(spec §4 calls it that); they gain one section that says the default is a
+config and how to change it. This repo's AGENTS.md and PR template stay
+specific — they govern this repo, which runs the default process (spec §6:
+repo prose, not engine). The `using-reinicorn` skill is already generic and
+is the model. Content is drawn from spec §1/§5 and the loader docstrings, not
+invented.
 
 ## Tasks
-- [ ] [task 1]
-- [ ] [task 2]
+- [ ] README "Customizing the process" + table heading
+- [ ] GETTING-STARTED pointer paragraph
+- [ ] linters/README registry sentence
+- [ ] upgrades/v0.4.md
+- [ ] Retro filled (Spec Drift), lint + gate, PR onto the integration branch
 
 ## Dependencies
-[Other branches/work this depends on or interacts with]
+Branches from `feat-process-as-config-stage4` (PR #74, unmerged) because it
+edits the same README paragraphs; the PR targets #74's branch and retargets
+to `feat-process-as-config` when #74 merges.
+
+## Spec Drift
+- **Accepted**: the spec has no stage 5; this is the documentation §1 assumed
+  and no stage scheduled. No engine or default change.
