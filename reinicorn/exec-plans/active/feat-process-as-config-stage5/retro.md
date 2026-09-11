@@ -26,6 +26,11 @@ branch: feat-process-as-config-stage5
 
 ## What Could Be Improved
 
+- First cut appended a "Customizing" section to a README that still
+  presented the default types as the product. Michael's review: document
+  the generic API with placeholders first, then show spec → plan → retro
+  as one configured instance. The rewrite followed; the right order was
+  knowable from spec §0 ("behaviors, not types") before writing.
 - The spec's stage list (§7) had no docs stage. "Documented way to customize"
   in §1 was an assumption with no owner. Stage plans should carry a
   "user-facing docs" acceptance criterion whenever a stage adds a config

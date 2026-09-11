@@ -24,10 +24,11 @@ line" would be *the documented way to customize* and no stage owned writing
 it. Docs only; no engine change.
 
 ## Acceptance Criteria
-- [x] README: doc-type table labelled as the *default* types; new
-      "Customizing the process" section covering overlay location, override /
-      add / disable semantics, fail-closed validation, `rcorn doc-types show`
-      and `--schema`, and the RFC → ADR worked example from spec §5
+- [x] README: generic model first (behaviors, relations, events, generated
+      CLI, config file, naming no type), then the shipped defaults as one
+      configured instance (relations as YAML, rows as a behaviors table,
+      default workflow, doc review), then customization examples (retro
+      opt-out, RFC → ADR from spec §5)
 - [x] GETTING-STARTED: one paragraph pointing at that section
 - [x] linters/README: states once that the process rules read the registry,
       so a custom type gets them without new rules
@@ -45,7 +46,7 @@ is the model. Content is drawn from spec §1/§5 and the loader docstrings, not
 invented.
 
 ## Tasks
-- [x] README "Customizing the process" + table heading
+- [x] README restructure, invariants before the configured version
 - [x] GETTING-STARTED pointer paragraph
 - [x] linters/README registry sentence
 - [x] upgrades/v0.4.md
