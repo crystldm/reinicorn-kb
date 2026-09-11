@@ -38,6 +38,13 @@ branch: feat-process-as-config-stage5
 
 ## Lessons Learned
 
+- Michael's intro rewrite set the voice for all user docs: lead with what
+  the reader does, state generality as the reader's freedom, introduce
+  each rule as action then consequence in workflow words (document, PR,
+  actionable, finalized), ground every term with a shipped-workflow
+  example in the same sentence, and keep engine vocabulary (row, field,
+  closer, event, fail-closed) out of explanations. The How-it-works
+  section was rewritten to that voice in the same PR.
 - Product docs describing the shipped default is fine (spec §4 calls it the
   default); what must not be missing is the one paragraph saying the default
   is a config and where the config lives. Check for that paragraph, not for
