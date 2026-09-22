@@ -140,6 +140,62 @@ Spike `so1` or `openjev` locally against the three retros written
 what the retros actually recorded. If it catches the drift the retros
 found by hand, write the seam spec.
 
+## Spike results (2026-09-22, openjev on a GTX 1070)
+
+Ran the suggested first step with `TheoLeeCJ/openjev` (Qwen3.5-4B Q4_K_M,
+llama.cpp backend built with CUDA for sm_61, all layers on the GPU). Per
+PR: state = the compressed diff (context lines dropped, 30-40 changed lines
+per file, ~25k chars), one `Choice` per spec Design subsection over
+{implemented, deviates, omitted, unrelated}, shared-state mode so the diff
+is prefilled once.
+
+| PR | Spec | Sections | Match vs hand labels | Wall |
+|---|---|---|---|---|
+| #27 | enforce-the-review-lane | 6 | 4/6 | 20 s |
+| #30 | unified-kb-doc-frontmatter | 7 | 3/5 labeled | 25 s |
+| #70 | process-as-config (stage 2) | 10 | 3/8 labeled | 32 s |
+
+Findings, most important first:
+
+1. **Evidence truncation caused the worst miss, not the model.** The one
+   real rename drift in #70 (`kb/required-sections` shipped as
+   `kb/plan-structure`) appears 10 times in the raw diff and zero times in
+   the compressed state, so "Shipped defaults" scored `unrelated` 0.93.
+   Any real design needs the diff-to-state step to be claim-aware (grep the
+   diff for every identifier the spec section names) rather than a blind
+   per-file cap.
+2. **Scope is not the model's question.** The known cut in #27 (spec §6,
+   never shipped) scored `unrelated` 0.86 instead of `omitted`, which is
+   correct by the option text: from the diff alone "not delivered" and
+   "not this PR's job" are indistinguishable. Whether a section was in
+   scope comes from the plan's Tasks in code; the model should only be
+   asked `Noul` "does this diff deliver this section".
+3. **Coarse 4-way Choice over a whole section is too blunt.** Stage
+   boundaries, philosophy sections ("Behaviors, not types") and worked
+   examples all confused the label. Better: extract concrete claims per
+   section (a lint name, a field, a command, a default) and ask one `Noul`
+   per claim; then the drift report is "claims not found in diff".
+4. **Where it was right, it was usefully right.** #30's extra frontmatter
+   fields (`review_pr`, `approved_by`, `review_cancelled`, absent from the
+   spec) came back `deviates` as the top option; the spec sections that
+   did land scored `implemented` at 0.67-0.88; and it correctly said #70
+   never touched AGENTS.md (`unrelated` 0.96).
+5. **Cost is a non-issue on a GPU.** 6-10 questions over a 5-8k token diff
+   cost 11-30 s of compute on a 2017 GPU, ~0.5 s per question after the
+   shared prefill. On CPU the same prefill was ~20 tok/s (minutes per PR)
+   and, on this machine, tripped the CPU thermal limit twice.
+
+Practical notes for a rerun: openjev's shared mode rejects a dict-shaped
+state (the closing `"}` merges with the following `,` in the tokenizer;
+a string state works); prebuilt CUDA wheels of llama-cpp-python (0.3.19)
+predate the Qwen3.5 architecture, so 0.3.35 must be built from source
+(conda-forge `cuda-nvcc=12.8` via micromamba, no root, ~18 min at -j2).
+
+Verdict: the primitive shape works and the speed is there; the accuracy
+gap is in question design and evidence preparation, which are code, not
+model, problems. Next experiment: claim extraction + per-claim `Noul`,
+with the diff filtered by the claim's identifiers.
+
 ## Sources
 
 - https://typesafe.ai/blog/introducing-system-one-models-and-jev
