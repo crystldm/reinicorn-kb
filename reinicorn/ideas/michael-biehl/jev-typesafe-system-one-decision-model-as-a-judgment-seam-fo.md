@@ -196,6 +196,72 @@ gap is in question design and evidence preparation, which are code, not
 model, problems. Next experiment: claim extraction + per-claim `Noul`,
 with the diff filtered by the claim's identifiers.
 
+## Spike 2 (2026-09-22): claim extraction + per-claim yes/no
+
+Same model, same three PRs, but the unit of judgment is a **claim**, not a
+section: every sentence, bullet or table row in a Design section that
+carries a backticked identifier becomes one yes/no question ("does the
+diff deliver this claim as written?"), and its evidence is the slice of the
+raw diff that mentions the claim's identifiers, not the whole compressed
+diff. 129 claims across the three PRs; direct mode on the GPU, 36-85 s per
+PR, ~1 s per claim including prefill.
+
+Two retrievers were tried. v1 grepped every backticked token; v2 turns
+`name(...)` into `def name(`, scopes the search to a file when the claim
+names one, and ranks evidence rarest-identifier-first so the line cap
+cannot fill up with test noise.
+
+| | coarse 4-way (spike 1) | claims v1 | claims v2 |
+|---|---|---|---|
+| section label agreement (18 labels) | 9/18 | 3/18 | 7/18 |
+| claim-level agreement (22 hand-verified claims) | n/a | 11/22 | 16/22 |
+
+Findings:
+
+1. **Retrieval dominates, again.** Every v1→v2 gain was evidence, not
+   judgment: #30's `read`/`write`/`validate` went from 0.11-0.58 to
+   0.75-0.99 once `def write(` outranked the 84 lines that merely contain
+   the word "write". The judge was fine; it had never been shown the
+   function.
+2. **Per-claim answers beat any aggregation of them.** On #70's "Stages"
+   section the model said Relations yes (0.92) and Loader, Gates, Defaults
+   no (0.19-0.30), which is exactly what stage-2 PR #70 is. Averaging those
+   into a section label produced "deviates", which is wrong. The useful
+   output is the list itself: *these claims have no evidence in this PR*.
+   Mapping claims to section verdicts scored worse than the blunt
+   4-way question, so do not build that mapping.
+3. **Four claim shapes a diff cannot answer.** (a) Claims about what
+   *stays* unchanged ("stays severity: warning") need the post-merge file,
+   not the diff. (b) Claims about *absence* ("the only place a type key may
+   appear is doc_types.py") read as "not delivered" even when the removals
+   are right there. (c) Claims that name a file the code put the helper
+   somewhere else (#27's resolver lives in `spec_refs.py`, the spec said
+   `draft_refs.py`/`pre_push.py`) go no-hit under file scoping, which is
+   arguably the correct "as written" answer but not what a reviewer wants.
+   (d) Name/signature drift (`_ensure_plan_spec_approved(root)` vs
+   `ensure_plan_spec_approved(root, branches)`) is waved through at 0.93;
+   a 4B model does not hold "as written" that tightly.
+4. **No-hit is the cheap signal.** 14 of 129 claims matched nothing in
+   the diff. For in-scope sections that list is the spec-drift report
+   with zero model calls (#27 §6's next-step hints, #30's migration
+   script, #70's `EXCLUDED_FILENAMES`). The model only earns its keep on
+   claims that *do* have evidence and need reading.
+5. **Mechanical claim extraction is half noise.** Rationale sentences
+   ("Containment. git ls-files only ever emits…", "Two changes to
+   linter/rules/draft_refs.py.") get scored like requirements and drag
+   the numbers. Claim extraction is the step that wants a frontier model
+   (or the spec author, at spec-writing time: a `Claims` block), not a
+   regex.
+
+Verdict after two spikes: for spec drift the pipeline that fits is
+**claims extracted once at review time → identifier retrieval against the
+PR (post-state files for "unchanged" claims) → one yes/no per claim with
+evidence → report the no-evidence and low-probability claims verbatim**.
+Section labels are the wrong output. The typed-decision model is the
+cheapest part and the least of the accuracy problem; the retrieval and
+claim-extraction code around it is where the work is, and that code is the
+same whether the backend is Jev or a local 4B.
+
 ## Sources
 
 - https://typesafe.ai/blog/introducing-system-one-models-and-jev
