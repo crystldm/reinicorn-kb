@@ -262,6 +262,56 @@ cheapest part and the least of the accuracy problem; the retrieval and
 claim-extraction code around it is where the work is, and that code is the
 same whether the backend is Jev or a local 4B.
 
+## Spike 3 (2026-09-23): retro substance gate
+
+This was the best-fit job from the follow-up brainstorm. The input is short
+and self-contained, the answer is a genuine binary, and no retrieval is
+needed. Setup: 83 sections from the 18 real retros, all labelled pass (9 of
+them are deliberate "None open." / "None. (No spec)" lines). Against them
+are 60 synthetic filler sections, written by a separate agent: 12 each of
+template leftovers, platitudes, activity logs with no evaluation, vague
+reflection, and hollow dismissals. The model scored each section alone
+(branch + heading + body), with P(pass) read from logits. Qwen3.5-4B Q4 ran
+on the GPU at about 0.4 s per row, and Tdie peaked at 61 °C.
+
+| Scorer | AUC | Best accuracy |
+|---|---|---|
+| Body length in characters (no model) | **0.91** | — |
+| "Substantive or filler?", rich option descriptions | 0.80 | 0.78 |
+| Same, options in the other order | 0.85 | 0.81 |
+| Same, terse descriptions | 0.74 | 0.75 |
+| "Names a concrete thing?" | 0.67 | 0.69 |
+| "Explains why, not just what?" | 0.86 | 0.78 |
+| specific × why | 0.85 | 0.80 |
+
+On the hard slice (real sections vs platitude/vague/activity-log), length
+scores 0.97 AUC and the best model question scores 0.87.
+
+1. **No prompt beat character count.** The synthetic filler is short, so
+   length is flattered here. Even so, the model's failures were not about
+   length: platitudes ("Tests passed and the PR merged smoothly.") passed
+   at P 0.90–1.00 under every holistic question.
+2. **Strong yes-bias on holistic judgments.** "- Nothing." and
+   "- (none yet)" passed at P=1.00 under the rich prompt. Swapping the
+   option order moved AUC by 0.05, so position bias is real too.
+3. **Narrow questions answer narrowly.** "Names a concrete thing?" is
+   exactly what activity logs satisfy (1.00). "Explains why?" is the one
+   question that separates activity logs (0.03), but it also fails 18 of
+   74 real sections. Real "What Went Well" bullets are often evidence
+   lists, which is legitimate but reads as "no why".
+4. **The explicit-none vs hollow-none split depends on the heading.**
+   "None." is fine under Action Items and filler under Lessons Learned.
+   That is a table lookup on the heading plus a length check, not a
+   judgment.
+
+Verdict: a 4B logit readout is not a substance gate. Leftovers and hollow
+dismissals are a regex plus a per-heading minimum length. Fluent generic
+text needs a stronger reader or a structural rule (for example, every
+Lessons bullet must reference a named artifact). Untested caveat: a
+length-matched filler set (long, fluent, generic) would remove the length
+advantage. The platitude results suggest the model would do no better
+there.
+
 ## Sources
 
 - https://typesafe.ai/blog/introducing-system-one-models-and-jev
