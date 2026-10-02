@@ -8,7 +8,7 @@ created: 2026-10-02
 author: Michael Biehl
 origin: ai-assisted
 human_validated: false
-category: _domain_
+category: cli
 severity: medium
 remediation: planned
 ---
@@ -17,8 +17,8 @@ remediation: planned
 
 ## Impact
 
-_What this debt causes._
+`rcorn update` hashes managed files from disk when it writes the update manifest. A file it skipped because the user modified it locally gets its *modified* hash recorded, so the next update sees it as untouched and overwrites the user's changes. Found by the PR #66 agent (2026-10-02) while deliberately keeping `.rumdl.toml` out of the manifest for the same reason.
 
 ## Remediation Plan
 
-_How to fix it._
+Record the shipped (template) hash for skipped files rather than the on-disk hash, or keep the previous manifest entry when a file is skipped as locally modified. Red/green test: modify a managed file, update twice, assert the modification survives.
