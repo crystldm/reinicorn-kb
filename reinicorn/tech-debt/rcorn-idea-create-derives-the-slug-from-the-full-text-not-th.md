@@ -8,8 +8,8 @@ created: 2026-10-02
 author: Michael Biehl
 origin: ai-assisted
 human_validated: false
-category: _domain_
-severity: medium
+category: cli
+severity: low
 remediation: planned
 ---
 
@@ -17,8 +17,8 @@ remediation: planned
 
 ## Impact
 
-_What this debt causes._
+`rcorn idea create "Title\n\nBody..."` sets the title from the first line correctly, but the slug (and filename) is cut from the whole text, so it bleeds into the body: e.g. `code-citation-staleness-for-kb-docs-from-kage-kage-github-co`. Slugs become unstable and hard to reference with `[[...]]` links. Observed 2026-10-02.
 
 ## Remediation Plan
 
-_How to fix it._
+Derive the slug from the parsed title only (first line), with a regression test asserting the filename for a multi-line idea text. Existing malformed slugs can stay; slugs are identities.
